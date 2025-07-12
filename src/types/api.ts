@@ -5,9 +5,6 @@ export interface IApi {
   // Получение списка товаров
   getProducts(): Promise<IProductDTO[]>;
 
-  // Получение информации о товаре по ID
-  getProductById(id: string): Promise<IProductDTO>;
-
   // Оформление заказа
   createOrder(order: IOrderDTO): Promise<IOrderResponseDTO>;
 }

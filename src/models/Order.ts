@@ -1,5 +1,5 @@
-import { IEvents } from '../components/base/events';
-import { PaymentMethod, IOrderDTO } from '../types';
+import { IEvents } from '../components';
+import { PaymentMethod } from '../types';
 import { AppEvent } from '../types';
 
 export class OrderModel {
@@ -7,8 +7,6 @@ export class OrderModel {
 	private _email: string = '';
 	private _phone: string = '';
 	private _paymentMethod: PaymentMethod | null = null;
-	private _items: string[] = [];
-	private _total: number = 0;
 
 	constructor(private readonly _events: IEvents) {
 		this._initEventListeners();
@@ -37,61 +35,42 @@ export class OrderModel {
 	}
 
 	/**
-	 * Устанавливает товары и общую стоимость заказа
+	 * Возвращает адрес доставки
 	 */
-	setOrderItems(items: string[], total: number): void {
-		this._items = [...items];
-		this._total = total;
+	getAddress(): string {
+		return this._address;
 	}
 
 	/**
-	 * Возвращает идентификаторы товаров в заказе
+	 * Возвращает email
 	 */
-	getItems(): string[] {
-		return [...this._items];
+	getEmail(): string {
+		return this._email;
 	}
 
 	/**
-	 * Возвращает общую стоимость заказа
+	 * Возвращает номер телефона
 	 */
-	getTotal(): number {
-		return this._total;
+	getPhone(): string {
+		return this._phone;
 	}
 
 	/**
-	 * Формирует объект заказа для отправки на сервер
+	 * Возвращает способ оплаты
 	 */
-	createOrder(): IOrderDTO | null {
-		if (
-			!this._address ||
-			!this._email ||
-			!this._phone ||
-			!this._paymentMethod ||
-			this._items.length === 0
-		) {
-			return null;
-		}
-
-		return {
-			address: this._address,
-			email: this._email,
-			phone: this._phone,
-			payment: this._paymentMethod,
-			items: this._items,
-			total: this._total
-		};
+	getPaymentMethod(): PaymentMethod | null {
+		return this._paymentMethod;
 	}
 
 	/**
-	 * Проверяет, готов ли заказ к оформлению
+	 * Проверяет, заполнены ли все обязательные поля
 	 */
-	isReadyToSubmit(): boolean {
+	isValid(): boolean {
 		return !!(
 			this._address &&
 			this._email &&
 			this._phone &&
-			this._paymentMethod &&
-			this._items.length > 0
+			this._paymentMethod
 		);
 	}
 
@@ -103,8 +82,6 @@ export class OrderModel {
 		this._email = '';
 		this._phone = '';
 		this._paymentMethod = null;
-		this._items = [];
-		this._total = 0;
 	}
 
 	/**
@@ -121,11 +98,6 @@ export class OrderModel {
 
 		this._events.on<{ method: PaymentMethod }>(AppEvent.ORDER_PAYMENT_SELECT, (data) => {
 			this.setPaymentMethod(data.method);
-		});
-
-		// Обработчик обновления данных заказа при изменении корзины
-		this._events.on<{ items: string[], total: number }>(AppEvent.ORDER_UPDATE, (data) => {
-			this.setOrderItems(data.items, data.total);
 		});
 	}
 }
