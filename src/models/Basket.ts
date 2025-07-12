@@ -1,105 +1,102 @@
-import { IEvents } from '../components';
-import { IBasketItem, IProduct, AppEvent } from '../types';
+import { Observable } from './base/Observable';
+import { IEvents } from '../components/base/events';
+import { IProduct, AppEvent } from '../types';
 
-export class BasketModel {
-  private _items: Map<string, IBasketItem> = new Map();
+export class BasketModel extends Observable {
+	private _items: Map<string, IProduct> = new Map();
 
-  constructor(private readonly _events: IEvents) {
-    this._initEventListeners();
-  }
+	constructor(events: IEvents) {
+		super(events);
+	}
 
-  /**
-   * Добавляет товар в корзину
-   */
-  addItem(product: IProduct, quantity: number = 1): void {
-    if (this._items.has(product.id)) {
-      const existingItem = this._items.get(product.id);
-      existingItem.quantity += quantity;
-    } else {
-      this._items.set(product.id, { product, quantity });
-    }
+	/**
+	 * Добавляет товар в корзину
+	 */
+	addItem(product: IProduct): void {
+		this._items.set(product.id, product);
+		this._notifyBasketUpdate();
+	}
 
-    this._notifyBasketUpdate();
-  }
+	/**
+	 * Удаляет товар из корзины
+	 */
+	removeItem(id: string): void {
+		const removed = this._items.delete(id);
 
-  /**
-   * Удаляет товар из корзины
-   */
-  removeItem(id: string): void {
-    this._items.delete(id);
-    this._notifyBasketUpdate();
-  }
+		if (removed) {
+			this._notifyBasketUpdate();
+		}
+	}
 
-  /**
-   * Очищает корзину
-   */
-  clear(): void {
-    this._items.clear();
-    this._notifyBasketUpdate();
-  }
+	/**
+	 * Очищает корзину
+	 */
+	clear(): void {
+		this._items.clear();
+		this._notifyBasketUpdate();
+	}
 
-  /**
-   * Возвращает товары в корзине
-   */
-  getItems(): Map<string, IBasketItem> {
-    return this._items;
-  }
+	/**
+	 * Возвращает товары в корзине
+	 */
+	getItems(): Map<string, IProduct> {
+		return new Map(this._items);
+	}
 
-  /**
-   * Возвращает массив идентификаторов товаров в корзине
-   */
-  getItemIds(): string[] {
-    return Array.from(this._items.keys());
-  }
+	/**
+	 * Возвращает массив товаров в корзине
+	 */
+	getItemsArray(): IProduct[] {
+		return Array.from(this._items.values());
+	}
 
-  /**
-   * Вычисляет общую стоимость товаров в корзине
-   */
-  getTotalPrice(): number {
-    let total = 0;
+	/**
+	 * Возвращает массив идентификаторов товаров в корзине
+	 */
+	getItemIds(): string[] {
+		return Array.from(this._items.keys());
+	}
 
-    this._items.forEach(item => {
-      total += item.product.price * item.quantity;
-    });
+	/**
+	 * Вычисляет общую стоимость товаров в корзине
+	 */
+	getTotalPrice(): number {
+		return Array.from(this._items.values()).reduce((total, item) => total + item.price, 0);
+	}
 
-    return total;
-  }
+	/**
+	 * Проверяет, есть ли товар в корзине
+	 */
+	hasItem(id: string): boolean {
+		return this._items.has(id);
+	}
 
-  /**
-   * Проверяет, есть ли товар в корзине
-   */
-  hasItem(id: string): boolean {
-    return this._items.has(id);
-  }
+	/**
+	 * Возвращает количество товаров в корзине
+	 */
+	getItemCount(): number {
+		return this._items.size;
+	}
 
-  /**
-   * Оповещает об изменении корзины
-   */
-  private _notifyBasketUpdate(): void {
-    this._events.emit(AppEvent.BASKET_UPDATE, {
-      items: Array.from(this._items.values()),
-      total: this.getTotalPrice()
-    });
-  }
+	/**
+	 * Уведомляет об изменениях в корзине
+	 */
+	private _notifyBasketUpdate(): void {
+		const items = this.getItemsArray();
+		const total = this.getTotalPrice();
+		const count = this.getItemCount();
 
-  /**
-   * Инициализирует обработчики событий
-   */
-  private _initEventListeners(): void {
-    this._events.on<{ product: IProduct }>(AppEvent.BASKET_ADD, (data) => {
-      this.addItem(data.product);
-    });
+		// Уведомляем компонент корзины
+		this._notifyChange(AppEvent.BASKET_UPDATE, {
+			items,
+			total,
+			count
+		});
 
-    this._events.on<{ productId: string }>(AppEvent.BASKET_REMOVE, (data) => {
-      this.removeItem(data.productId);
-    });
-
-    this._events.on(AppEvent.BASKET_CLEAR, () => {
-      this.clear();
-    });
-
-    this._events.on(AppEvent.ORDER_SUCCESS, () => {
-      this.clear();
-    });
-  }
+		// Уведомляем модель заказа
+		this._notifyChange(AppEvent.ORDER_UPDATE, {
+			items: this.getItemIds(),
+			total
+		});
+	}
 }
