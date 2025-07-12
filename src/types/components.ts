@@ -38,10 +38,6 @@ export interface ICatalog extends ITemplateComponent {
 export interface IBasket extends ITemplateComponent {
 	readonly items: Map<string, IProduct>;
 	readonly total: number;
-	addItem(product: IProduct): void;
-	removeItem(id: string): void;
-	clear(): void;
-	setItems(items: Map<string, IProduct>): void;
 }
 
 // Интерфейс для формы заказа

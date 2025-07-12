@@ -1,11 +1,12 @@
+import { Observable } from './base/Observable';
 import { IEvents } from '../components';
 import { IProduct, AppEvent } from '../types';
 
-export class BasketModel {
+export class BasketModel extends Observable {
 	private _items: Map<string, IProduct> = new Map();
 
-	constructor(private readonly _events: IEvents) {
-		this._initEventListeners();
+	constructor(events: IEvents) {
+		super(events);
 	}
 
 	/**
@@ -13,15 +14,26 @@ export class BasketModel {
 	 */
 	addItem(product: IProduct): void {
 		this._items.set(product.id, product);
-		this._notifyBasketUpdate();
+		this._notifyChange(AppEvent.BASKET_UPDATE, {
+			items: Array.from(this._items.values()),
+			total: this.getTotalPrice(),
+			count: this._items.size
+		});
 	}
 
 	/**
 	 * Удаляет товар из корзины
 	 */
 	removeItem(id: string): void {
-		this._items.delete(id);
-		this._notifyBasketUpdate();
+		const removed = this._items.delete(id);
+
+		if (removed) {
+			this._notifyChange(AppEvent.BASKET_UPDATE, {
+				items: Array.from(this._items.values()),
+				total: this.getTotalPrice(),
+				count: this._items.size
+			});
+		}
 	}
 
 	/**
@@ -29,14 +41,25 @@ export class BasketModel {
 	 */
 	clear(): void {
 		this._items.clear();
-		this._notifyBasketUpdate();
+		this._notifyChange(AppEvent.BASKET_UPDATE, {
+			items: [],
+			total: 0,
+			count: 0
+		});
 	}
 
 	/**
 	 * Возвращает товары в корзине
 	 */
 	getItems(): Map<string, IProduct> {
-		return this._items;
+		return new Map(this._items);
+	}
+
+	/**
+	 * Возвращает массив товаров в корзине
+	 */
+	getItemsArray(): IProduct[] {
+		return Array.from(this._items.values());
 	}
 
 	/**
@@ -50,13 +73,7 @@ export class BasketModel {
 	 * Вычисляет общую стоимость товаров в корзине
 	 */
 	getTotalPrice(): number {
-		let total = 0;
-
-		this._items.forEach(item => {
-			total += item.price;
-		});
-
-		return total;
+		return Array.from(this._items.values()).reduce((total, item) => total + item.price, 0);
 	}
 
 	/**
@@ -71,36 +88,5 @@ export class BasketModel {
 	 */
 	getItemCount(): number {
 		return this._items.size;
-	}
-
-	/**
-	 * Оповещает об изменении корзины
-	 */
-	private _notifyBasketUpdate(): void {
-		this._events.emit(AppEvent.BASKET_UPDATE, {
-			items: Array.from(this._items.values()),
-			total: this.getTotalPrice()
-		});
-	}
-
-	/**
-	 * Инициализирует обработчики событий
-	 */
-	private _initEventListeners(): void {
-		this._events.on<{ product: IProduct }>(AppEvent.BASKET_ADD, (data) => {
-			this.addItem(data.product);
-		});
-
-		this._events.on<{ productId: string }>(AppEvent.BASKET_REMOVE, (data) => {
-			this.removeItem(data.productId);
-		});
-
-		this._events.on(AppEvent.BASKET_CLEAR, () => {
-			this.clear();
-		});
-
-		this._events.on(AppEvent.ORDER_SUCCESS, () => {
-			this.clear();
-		});
 	}
 }
