@@ -57,16 +57,10 @@ export interface IErrorResponseDTO {
 	error: string;
 }
 
-// Модель для корзины
-export interface IBasketItem {
-	product: IProduct;
-	quantity: number;
-}
-
 // Состояние приложения
 export interface IAppState {
 	catalog: IProduct[];
-	basket: Map<string, IBasketItem>;
+	basket: Map<string, IProduct>;
 	preview: IProduct | null;
 	order: IOrderDTO | null;
 	formErrors: string[];
