@@ -47,21 +47,4 @@ export class ProductModel extends Observable {
 	getProductById(id: string): IProduct | undefined {
 		return this._products.find(product => product.id === id);
 	}
-
-	/**
-	 * Устанавливает выбранный продукт
-	 */
-	setSelectedProduct(product: IProduct | null): void {
-		this._selectedProduct = product;
-		this._notifyChange(AppEvent.PRODUCT_SELECT, {
-			product: this._selectedProduct
-		});
-	}
-
-	/**
-	 * Возвращает выбранный продукт
-	 */
-	getSelectedProduct(): IProduct | null {
-		return this._selectedProduct;
-	}
 }

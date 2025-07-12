@@ -1,5 +1,5 @@
-import { IAppState, IOrderDTO, IProduct, PaymentMethod } from './models';
-import { ProductCard } from '../components/ProductCard';
+import { IOrderDTO, IProduct, PaymentMethod } from './models';
+import { ProductCard } from '../components';
 
 // Список событий в приложении
 export const enum AppEvent {
@@ -104,10 +104,6 @@ export interface IFormErrorsEvent {
 	errors: string[];
 }
 
-export interface IStateChangeEvent {
-	state: Partial<IAppState>;
-}
-
 export interface IEventPayloadMap {
 	[AppEvent.PRODUCTS_LOADED]: IProductsLoadedEvent;
 	[AppEvent.CARDS_LOADED]: ICardsLoadedEvent;
@@ -130,5 +126,4 @@ export interface IEventPayloadMap {
 	[AppEvent.MODAL_CLOSE]: Record<string, never>;
 	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
 	[AppEvent.FORM_VALID]: Record<string, never>;
-	[AppEvent.STATE_CHANGE]: IStateChangeEvent;
 }

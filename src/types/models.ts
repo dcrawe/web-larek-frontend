@@ -56,12 +56,3 @@ export interface IOrderResponseDTO {
 export interface IErrorResponseDTO {
 	error: string;
 }
-
-// Состояние приложения
-export interface IAppState {
-	catalog: IProduct[];
-	basket: Map<string, IProduct>;
-	preview: IProduct | null;
-	order: IOrderDTO | null;
-	formErrors: string[];
-}
