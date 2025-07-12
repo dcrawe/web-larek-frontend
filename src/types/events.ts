@@ -22,6 +22,7 @@ export const enum AppEvent {
 
 	// События заказа
 	ORDER_OPEN = 'order:open',
+	ORDER_UPDATE = 'order:update',
 	ORDER_PAYMENT_SELECT = 'order:payment:select',
 	ORDER_ADDRESS_SET = 'order:address:set',
 	ORDER_CONTACTS_SET = 'order:contacts:set',

@@ -1,5 +1,5 @@
 import { Observable } from './base/Observable';
-import { IEvents } from '../components';
+import { IEvents } from '../components/base/events';
 import { IProduct, AppEvent } from '../types';
 
 export class BasketModel extends Observable {
@@ -14,11 +14,7 @@ export class BasketModel extends Observable {
 	 */
 	addItem(product: IProduct): void {
 		this._items.set(product.id, product);
-		this._notifyChange(AppEvent.BASKET_UPDATE, {
-			items: Array.from(this._items.values()),
-			total: this.getTotalPrice(),
-			count: this._items.size
-		});
+		this._notifyBasketUpdate();
 	}
 
 	/**
@@ -28,11 +24,7 @@ export class BasketModel extends Observable {
 		const removed = this._items.delete(id);
 
 		if (removed) {
-			this._notifyChange(AppEvent.BASKET_UPDATE, {
-				items: Array.from(this._items.values()),
-				total: this.getTotalPrice(),
-				count: this._items.size
-			});
+			this._notifyBasketUpdate();
 		}
 	}
 
@@ -41,11 +33,7 @@ export class BasketModel extends Observable {
 	 */
 	clear(): void {
 		this._items.clear();
-		this._notifyChange(AppEvent.BASKET_UPDATE, {
-			items: [],
-			total: 0,
-			count: 0
-		});
+		this._notifyBasketUpdate();
 	}
 
 	/**
@@ -88,5 +76,27 @@ export class BasketModel extends Observable {
 	 */
 	getItemCount(): number {
 		return this._items.size;
+	}
+
+	/**
+	 * Уведомляет об изменениях в корзине
+	 */
+	private _notifyBasketUpdate(): void {
+		const items = this.getItemsArray();
+		const total = this.getTotalPrice();
+		const count = this.getItemCount();
+
+		// Уведомляем компонент корзины
+		this._notifyChange(AppEvent.BASKET_UPDATE, {
+			items,
+			total,
+			count
+		});
+
+		// Уведомляем модель заказа
+		this._notifyChange(AppEvent.ORDER_UPDATE, {
+			items: this.getItemIds(),
+			total
+		});
 	}
 }
