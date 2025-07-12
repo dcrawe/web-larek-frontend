@@ -1,4 +1,5 @@
 import { IAppState, IOrderDTO, IProduct, PaymentMethod } from './models';
+import { ProductCard } from '../components/ProductCard';
 
 // Список событий в приложении
 export const enum AppEvent {
@@ -6,6 +7,11 @@ export const enum AppEvent {
 	PRODUCTS_LOADED = 'products:loaded',
 	PRODUCT_SELECT = 'product:select',
 	PRODUCT_PREVIEW = 'product:preview',
+
+	// События карточек
+	CARDS_LOADED = 'cards:loaded',
+	CARD_ADD = 'card:add',
+	CARD_REMOVE = 'card:remove',
 
 	// События корзины
 	BASKET_ADD = 'basket:add',
@@ -37,6 +43,18 @@ export const enum AppEvent {
 // Интерфейсы для событий
 export interface IProductsLoadedEvent {
 	products: IProduct[];
+}
+
+export interface ICardsLoadedEvent {
+	cards: ProductCard[];
+}
+
+export interface ICardAddEvent {
+	card: ProductCard;
+}
+
+export interface ICardRemoveEvent {
+	card: ProductCard;
 }
 
 export interface IProductSelectEvent {
@@ -92,6 +110,9 @@ export interface IStateChangeEvent {
 
 export interface IEventPayloadMap {
 	[AppEvent.PRODUCTS_LOADED]: IProductsLoadedEvent;
+	[AppEvent.CARDS_LOADED]: ICardsLoadedEvent;
+	[AppEvent.CARD_ADD]: ICardAddEvent;
+	[AppEvent.CARD_REMOVE]: ICardRemoveEvent;
 	[AppEvent.PRODUCT_SELECT]: IProductSelectEvent;
 	[AppEvent.PRODUCT_PREVIEW]: IProductSelectEvent;
 	[AppEvent.BASKET_ADD]: IBasketAddEvent;

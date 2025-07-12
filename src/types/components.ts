@@ -1,5 +1,6 @@
 import { IEvents } from '../components';
 import { IProduct, PaymentMethod } from './models';
+import { ProductCard } from '../components/ProductCard';
 
 // Базовый интерфейс для всех компонентов
 export interface IComponent {
@@ -26,9 +27,11 @@ export interface IProductCard extends ITemplateComponent {
 
 // Интерфейс для каталога товаров
 export interface ICatalog extends ITemplateComponent {
-	readonly products: IProduct[];
-	addProduct(product: IProduct): void;
-	setProducts(products: IProduct[]): void;
+	readonly cards: ProductCard[];
+	addCard(card: ProductCard): void;
+	setCards(cards: ProductCard[]): void;
+	removeCard(card: ProductCard): void;
+	clear(): void;
 }
 
 // Интерфейс для корзины
