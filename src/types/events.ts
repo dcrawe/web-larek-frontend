@@ -36,9 +36,6 @@ export const enum AppEvent {
 	// События формы
 	FORM_ERRORS = 'form:errors',
 	FORM_VALID = 'form:valid',
-
-	// События состояния приложения
-	STATE_CHANGE = 'state:change'
 }
 
 // Интерфейсы для событий

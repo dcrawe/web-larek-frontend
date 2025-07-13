@@ -116,8 +116,10 @@ constructor(events: IEvents, containerSelector?: string)
 - `containerSelector` - селектор контейнера галереи (по умолчанию `.gallery`)
 
 **Методы**:
-- `addProduct(product: IProduct): void` - добавляет товар в каталог
-- `setProducts(products: IProduct[]): void` - устанавливает список товаров
+- `addCard(card: ProductCard): void` - добавляет карточку в каталог
+- `setCards(cards: ProductCard[]): void` - устанавливает набор карточек
+- `removeCard(card: ProductCard): void` - удаляет карточку из каталога
+- `clear(): void` - очищает каталог
 - `_initEventListeners(): void` - инициализирует обработчики событий
 ---
 #### Basket
@@ -130,11 +132,7 @@ constructor(events: IEvents)
 - `events` - брокер событий
 
 **Методы**:
-- `addItem(item: IBasketItem): void` - добавляет товар в корзину
-- `removeItem(id: string): void` - удаляет товар из корзины
-- `clear(): void` - очищает корзину
-- `setItems(items: Map<string, IBasketItem>): void` - устанавливает товары в корзине
-- `_updateBasket(): void` - обновляет отображение корзины
+- `_updateDisplay(items: IProduct[], total: number, count: number): void` - обновляет отображение корзины
 - `_initEventListeners(): void` - инициализирует обработчики событий
 ---
 #### ProductCard
@@ -142,13 +140,14 @@ constructor(events: IEvents)
 
 **Конструктор**:
 ```typescript
-constructor(product: IProduct, events: IEvents)
+constructor(product: IProduct, events: IEvents, template?: string)
 ```
 - `product` - данные товара
 - `events` - брокер событий
+- `template` - ID шаблона (по умолчанию `TEMPLATE_IDS.CARD_CATALOG`)
 
 **Методы**:
-- `updateDisplay(): void` - обновляет отображение карточки
+- `_render(): void` - отрисовывает карточку товара
 - `_initEventListeners(): void` - инициализирует обработчики событий
 ---
 #### ProductPreview
@@ -163,6 +162,7 @@ constructor(product: IProduct, events: IEvents)
 
 **Методы**:
 - `updateAddButton(isInBasket: boolean): void` - обновляет состояние кнопки добавления
+- `_render(): void` - отрисовывает детальную информацию о товаре
 - `_initEventListeners(): void` - инициализирует обработчики событий
 ---
 #### Modal
@@ -170,14 +170,15 @@ constructor(product: IProduct, events: IEvents)
 
 **Конструктор**:
 ```typescript
-constructor(events: IEvents)
+constructor(events: IEvents, modalId?: string)
 ```
 - `events` - брокер событий
+- `modalId` - ID модального окна (по умолчанию `MODAL_IDS.MODAL_CONTAINER`)
 
 **Методы**:
 - `open(): void` - открывает модальное окно
 - `close(): void` - закрывает модальное окно
-- `setContent(content: HTMLElement): void` - устанавливает содержимое модального окна
+- `setContent(content: HTMLElement | string): void` - устанавливает содержимое модального окна
 - `_initEventListeners(): void` - инициализирует обработчики событий
 ---
 #### OrderForm
@@ -188,6 +189,11 @@ constructor(events: IEvents)
 constructor(events: IEvents)
 ```
 - `events` - брокер событий
+
+**Свойства**:
+- `paymentMethod: PaymentMethod | null` - выбранный способ оплаты
+- `address: string` - адрес доставки
+- `isValid: boolean` - статус валидности формы
 
 **Методы**:
 - `setPaymentMethod(method: PaymentMethod): void` - устанавливает способ оплаты
@@ -203,6 +209,11 @@ constructor(events: IEvents)
 constructor(events: IEvents)
 ```
 - `events` - брокер событий
+
+**Свойства**:
+- `email: string` - email пользователя
+- `phone: string` - телефон пользователя
+- `isValid: boolean` - статус валидности формы
 
 **Методы**:
 - `setEmail(email: string): void` - устанавливает email
@@ -220,7 +231,7 @@ constructor(events: IEvents)
 - `events` - брокер событий
 
 **Методы**:
-- `setOrderInfo(orderId: string, total: number): void` - устанавливает информацию о заказе
+- `_updateOrderInfo(orderId: string, total: number): void` - обновляет информацию о заказе
 - `_initEventListeners(): void` - инициализирует обработчики событий
 
 ### Модели данных
@@ -236,13 +247,15 @@ constructor(events: IEvents)
 - `events` - брокер событий
 
 **Методы**:
-- `addItem(product: IProduct, quantity?: number): void` - добавляет товар в корзину
+- `addItem(product: IProduct): void` - добавляет товар в корзину
 - `removeItem(id: string): void` - удаляет товар из корзины
 - `clear(): void` - очищает корзину
-- `getItems(): Map<string, IBasketItem>` - возвращает товары в корзине
+- `getItems(): Map<string, IProduct>` - возвращает товары в корзине
+- `getItemsArray(): IProduct[]` - возвращает массив товаров в корзине
 - `getItemIds(): string[]` - возвращает ID товаров в корзине
 - `getTotalPrice(): number` - вычисляет общую стоимость
 - `hasItem(id: string): boolean` - проверяет наличие товара в корзине
+- `getItemCount(): number` - возвращает количество товаров в корзине
 - `_notifyBasketUpdate(): void` - уведомляет об изменении корзины
 - `_initEventListeners(): void` - инициализирует обработчики событий
 
@@ -257,11 +270,10 @@ constructor(events: IEvents)
 - `events` - брокер событий
 
 **Методы**:
-- `setProducts(products: IProduct[]): void` - устанавливает список товаров
+- `mapProduct(dto: IProductDTO): IProduct` - преобразует DTO в модель продукта
+- `setProducts(productsDTO: IProductDTO[]): void` - устанавливает список товаров
 - `getProducts(): IProduct[]` - возвращает список товаров
-- `getProductById(id: string): IProduct` - возвращает товар по ID
-- `addProduct(product: IProduct): void` - добавляет товар в каталог
-- `_notifyProductsUpdate(): void` - уведомляет об обновлении товаров
+- `getProductById(id: string): IProduct | undefined` - возвращает товар по ID
 
 ---
 #### OrderModel
@@ -269,37 +281,38 @@ constructor(events: IEvents)
 
 **Конструктор**:
 ```typescript
-constructor(events: IEvents, basketModel: BasketModel)
+constructor(events: IEvents)
 ```
 - `events` - брокер событий
-- `basketModel` - модель корзины
 
 **Методы**:
-- `setPaymentMethod(method: PaymentMethod): void` - устанавливает способ оплаты
 - `setAddress(address: string): void` - устанавливает адрес доставки
 - `setContacts(email: string, phone: string): void` - устанавливает контактные данные
-- `createOrder(): IOrderDTO` - создает объект заказа
-- `isReadyToSubmit(): boolean` - проверяет готовность к отправке
+- `setPaymentMethod(method: PaymentMethod): void` - устанавливает способ оплаты
+- `getAddress(): string` - возвращает адрес доставки
+- `getEmail(): string` - возвращает email
+- `getPhone(): string` - возвращает номер телефона
+- `getPaymentMethod(): PaymentMethod | null` - возвращает способ оплаты
+- `isValid(): boolean` - проверяет валидность данных заказа
 - `clear(): void` - очищает данные заказа
+- `_initEventListeners(): void` - инициализирует обработчики событий
 
-## Сервисы
+### Базовые модели
 
 ---
-#### ApiService
-**Назначение**: Сервис для взаимодействия с API сервера.
+#### Observable
+**Назначение**: Базовый класс для наблюдаемых моделей.
 
 **Конструктор**:
 ```typescript
-constructor(baseUrl?: string)
+constructor(events: IEvents)
 ```
-- `baseUrl` - базовый URL API (опционально)
+- `events` - брокер событий
 
 **Методы**:
-- `getProducts(): Promise<IProductDTO[]>` - получает список товаров
-- `getProductById(id: string): Promise<IProductDTO>` - получает товар по ID
-- `createOrder(order: IOrderDTO): Promise<IOrderResponseDTO>` - создает заказ
-- `_get<T>(url: string): Promise<T>` - выполняет GET запрос
-- `_post<T, R>(url: string, data: T): Promise<R>` - выполняет POST запрос
+- `_notifyChange(eventName: string, data?: any): void` - уведомляет подписчиков об изменениях
+
+## Сервисы
 
 ---
 #### EventEmitter
@@ -328,28 +341,48 @@ constructor()
 - `init(): Promise<void>` - инициализирует приложение
 - `_initEventListeners(): void` - инициализирует обработчики событий
 
-
 ## Используемые типы данных
 
 ### Ключевые типы данных
 
-#### IProduct
+#### IProductBase
 ```typescript
-interface IProduct {
-  id: string;              // Уникальный идентификатор товара
-  description: string;     // Описание товара
-  image: string;           // URL изображения товара
-  title: string;           // Название товара
-  category: ProductCategory; // Категория товара
-  price: number;           // Цена товара
+interface IProductBase {
+  id: string;           // Уникальный идентификатор товара
+  description: string;  // Описание товара
+  image: string;        // URL изображения товара
+  title: string;        // Название товара
+  price: number;        // Цена товара
 }
 ```
 
-#### IBasketItem
+#### IProduct
 ```typescript
-interface IBasketItem {
-  product: IProduct;       // Товар в корзине
-  quantity: number;        // Количество товара
+interface IProduct extends IProductBase {
+  category: ProductCategory; // Категория товара
+}
+```
+
+#### IProductDTO
+```typescript
+interface IProductDTO extends IProductBase {
+  category: string;        // Категория товара (строка)
+}
+```
+
+#### IContactInfo
+```typescript
+  interface IContactInfo {
+  email: string;    // Email покупателя
+  phone: string;    // Телефон покупателя
+  address: string;  // Адрес доставки
+}
+```
+
+#### IUser
+```typescript
+interface IUser extends IContactInfo {
+  payment: PaymentMethod;  // Способ оплаты
 }
 ```
 
@@ -357,9 +390,6 @@ interface IBasketItem {
 ```typescript
 interface IOrderDTO {
   payment: PaymentMethod;  // Способ оплаты
-  email: string;           // Email покупателя
-  phone: string;           // Телефон покупателя
-  address: string;         // Адрес доставки
   total: number;           // Общая сумма заказа
   items: string[];         // Массив ID товаров
 }
@@ -367,7 +397,7 @@ interface IOrderDTO {
 
 #### PaymentMethod
 ```typescript
-type PaymentMethod = 'card' | 'cash'; // Способ оплаты: карта или наличные
+type PaymentMethod = 'online' | 'cash'; // Способ оплаты: онлайн или наличными
 ```
 
 #### ProductCategory
@@ -375,7 +405,62 @@ type PaymentMethod = 'card' | 'cash'; // Способ оплаты: карта �
 type ProductCategory = 'софт-скил' | 'хард-скил' | 'другое' | 'дополнительное' | 'кнопка';
 ```
 
-### Тип с событиями и типы событий
+### Типы компонентов
+
+#### IComponent
+```typescript
+interface IComponent {
+  render(): HTMLElement;  // возвращает HTML-элемент компонента для отображения
+}
+```
+#### ITemplateComponent
+
+```typescript
+interface ITemplateComponent extends IComponent {
+  readonly template: HTMLTemplateElement;   // ссылка на HTML-шаблон (только для чтения)
+  readonly container: HTMLElement;          // контейнер для размещения компонента (только для чтения)
+}
+```
+
+#### IModal
+```typescript
+interface IModal extends ITemplateComponent {
+  open(): void;                           // открывает модальное окно
+  close(): void;                          // закрывает модальное окно
+  setContent(content: HTMLElement): void; // устанавливает содержимое модального окна
+}
+```
+
+#### IProductCard
+```typescript
+interface IProductCard extends ITemplateComponent {
+  readonly product: IProduct; // товар, отображаемый в карточке
+}
+```
+
+#### IOrderForm
+```typescript
+interface IOrderForm extends ITemplateComponent {
+  readonly paymentMethod: PaymentMethod | null;   // выбранный способ оплаты (может быть null, если не выбран)
+  readonly address: string;                       // адрес доставки
+  readonly isValid: boolean;                      // валидность формы заказа
+  setPaymentMethod(method: PaymentMethod): void;  // устанавливает способ оплаты
+  setAddress(address: string): void;              // устанавливает адрес доставки
+}
+```
+
+#### IContactsForm
+```typescript
+interface IContactsForm extends ITemplateComponent {
+  readonly email: string;         // email пользователя
+  readonly phone: string;         // телефон пользователя
+  readonly isValid: boolean;      // валидность формы контактов
+  setEmail(email: string): void;  // устанавливает email
+  setPhone(phone: string): void;  // устанавливает телефон
+}
+```
+
+### Типы событий
 
 #### AppEvent
 ```typescript
@@ -383,61 +468,118 @@ enum AppEvent {
   // События товаров
   PRODUCTS_LOADED = 'products:loaded',
   PRODUCT_SELECT = 'product:select',
-  
+  PRODUCT_PREVIEW = 'product:preview',
+
+  // События карточек
+  CARDS_LOADED = 'cards:loaded',
+  CARD_ADD = 'card:add',
+  CARD_REMOVE = 'card:remove',
+
   // События корзины
   BASKET_ADD = 'basket:add',
   BASKET_REMOVE = 'basket:remove',
   BASKET_UPDATE = 'basket:update',
-  BASKET_OPEN = 'basket:open',
   BASKET_CLEAR = 'basket:clear',
-  
+  BASKET_OPEN = 'basket:open',
+
   // События заказа
   ORDER_OPEN = 'order:open',
+  ORDER_UPDATE = 'order:update',
+  ORDER_PAYMENT_SELECT = 'order:payment:select',
+  ORDER_ADDRESS_SET = 'order:address:set',
   ORDER_CONTACTS_SET = 'order:contacts:set',
+  ORDER_SUBMIT = 'order:submit',
   ORDER_SUCCESS = 'order:success',
-  
-  // События модального окна
+
+  // События модальных окон
   MODAL_OPEN = 'modal:open',
   MODAL_CLOSE = 'modal:close',
-  
-  // События форм
+
+  // События формы
+  FORM_ERRORS = 'form:errors',
   FORM_VALID = 'form:valid',
-  FORM_ERRORS = 'form:errors'
 }
 ```
 
-#### Типы данных событий
+### Интерфейсы событий
+
 ```typescript
-// Данные для события загрузки товаров
-interface ProductsLoadedEvent {
-	products: IProduct[];
+// Событие загрузки товаров
+interface IProductsLoadedEvent {
+  products: IProduct[];
 }
 
-// Данные для события добавления в корзину
-interface BasketAddEvent {
-	product: IProduct;
+// Событие загрузки карточек
+interface ICardsLoadedEvent {
+  cards: ProductCard[];
 }
 
-// Данные для события удаления из корзины
-interface BasketRemoveEvent {
-	productId: string;
+// Событие добавления карточки
+interface ICardAddEvent {
+  card: ProductCard;
 }
 
-// Данные для события обновления корзины
-interface BasketUpdateEvent {
-	items: IBasketItem[];
-	total: number;
+// Событие удаления карточки
+interface ICardRemoveEvent {
+  card: ProductCard;
 }
 
-// Данные для события установки контактов
-interface OrderContactsSetEvent {
-	email: string;
-	phone: string;
+// Событие выбора товара
+interface IProductSelectEvent {
+  product: IProduct;
 }
 
-// Данные для события ошибок формы
-interface FormErrorsEvent {
-	errors: string[];
+// Событие добавления в корзину
+interface IBasketAddEvent {
+  product: IProduct;
+}
+
+// Событие удаления из корзины
+interface IBasketRemoveEvent {
+  productId: string;
+}
+
+// Событие обновления корзины
+interface IBasketUpdateEvent {
+  items: IProduct[];
+  total: number;
+}
+
+// Событие выбора способа оплаты
+interface IOrderPaymentSelectEvent {
+  method: PaymentMethod;
+}
+
+// Событие установки адреса доставки
+interface IOrderAddressSetEvent {
+  address: string;
+}
+
+// Событие установки контактных данных
+interface IOrderContactsSetEvent {
+  email: string;
+  phone: string;
+}
+
+// Событие отправки заказа
+interface IOrderSubmitEvent {
+  order: IOrderDTO;
+}
+
+// Событие успешного оформления заказа
+interface IOrderSuccessEvent {
+  orderId: string;
+  total: number;
+}
+
+// Событие открытия модального окна
+interface IModalOpenEvent {
+  content: HTMLElement;
+}
+
+// Событие ошибок формы
+interface IFormErrorsEvent {
+  errors: string[];
 }
 ```
 
@@ -445,7 +587,7 @@ interface FormErrorsEvent {
 ```typescript
 type EventName = string | RegExp;    // Имя события
 type Subscriber = Function;          // Подписчик на событие
-type EmitterEvent = {               // Событие эмиттера
+type EmitterEvent = {                // Событие эмиттера
   eventName: string;
   data: unknown;
 };
