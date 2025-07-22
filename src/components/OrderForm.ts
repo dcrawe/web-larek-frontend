@@ -4,13 +4,13 @@ import { IOrderForm, AppEvent, PaymentMethod } from '../types';
 import { CLASS_NAMES, MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 
 export class OrderForm extends TemplateComponent implements IOrderForm {
-  paymentMethod: PaymentMethod | null = null;
-  address: string = '';
-  isValid: boolean = false;
   private readonly _submitButton: HTMLButtonElement;
   private readonly _addressInput: HTMLInputElement;
   private readonly _paymentButtons: NodeListOf<HTMLButtonElement>;
   private readonly _errorElement: HTMLElement;
+  private _address: string = '';
+  private _paymentMethod: PaymentMethod | null = null;
+  private _isValid: boolean = false;
 
   constructor(private readonly _events: IEvents) {
     super(TEMPLATE_IDS.ORDER);
@@ -43,10 +43,31 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
   }
 
   /**
+   * Возвращает выбранный способ оплаты
+   */
+  get paymentMethod(): PaymentMethod | null {
+    return this._paymentMethod;
+  }
+
+  /**
+   * Возвращает адрес доставки
+   */
+  get address(): string {
+    return this._address;
+  }
+
+  /**
+   * Возвращает статус валидности формы
+   */
+  get isValid(): boolean {
+    return this._isValid;
+  }
+
+  /**
    * Устанавливает способ оплаты
    */
   setPaymentMethod(method: PaymentMethod): void {
-    this.paymentMethod = method;
+    this._paymentMethod = method;
 
     // Обновляем внешний вид кнопок
     this._paymentButtons.forEach(button => {
@@ -60,48 +81,37 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
       }
     });
 
-    // Проверяем валидность формы
-    this._validateForm();
+    // Отправляем событие выбора способа оплаты
+    this._events.emit(AppEvent.ORDER_PAYMENT_SELECT, { method: method });
   }
 
   /**
    * Устанавливает адрес доставки
    */
   setAddress(address: string): void {
-    this.address = address;
+    this._address = address;
     this._addressInput.value = address;
 
-    // Проверяем валидность формы
-    this._validateForm();
+    // Отправляем событие установки адреса
+    this._events.emit(AppEvent.ORDER_ADDRESS_SET, { address: address });
   }
 
   /**
-   * Проверяет валидность формы
+   * Обновляет состояние валидности формы
    */
-  private _validateForm(): void {
-    const errors: string[] = [];
+  updateValidState(isValid: boolean): void {
+    this._isValid = isValid;
+    this._submitButton.disabled = !isValid;
+  }
 
-    // Проверяем, выбран ли способ оплаты
-    if (!this.paymentMethod) {
-      errors.push(MESSAGES.PAYMENT_REQUIRED);
-    }
-
-    // Проверяем, введен ли адрес
-    if (!this.address.trim()) {
-      errors.push(MESSAGES.ADDRESS_REQUIRED);
-    }
-
-    // Устанавливаем статус валидности
-    this.isValid = errors.length === 0;
-    this._submitButton.disabled = !this.isValid;
-
-    // Отображаем ошибки, если они есть
+  /**
+   * Обновляет отображение ошибок
+   */
+  updateErrors(errors: string[]): void {
     if (errors.length > 0) {
       this._errorElement.textContent = errors.join('. ');
-      this._events.emit(AppEvent.FORM_ERRORS, { errors });
     } else {
       this._errorElement.textContent = '';
-      this._events.emit(AppEvent.FORM_VALID);
     }
   }
 
@@ -113,9 +123,8 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
     this._element.addEventListener('submit', (event) => {
       event.preventDefault();
 
-      if (this.isValid) {
-        this._events.emit(AppEvent.ORDER_ADDRESS_SET, { address: this.address });
-        this._events.emit(AppEvent.ORDER_PAYMENT_SELECT, { method: this.paymentMethod });
+      if (this._isValid) {
+        this._events.emit(AppEvent.ORDER_SUBMIT);
       }
     });
 
@@ -130,6 +139,16 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
         const method = button.name === 'card' ? 'online' : 'cash';
         this.setPaymentMethod(method as PaymentMethod);
       });
+    });
+
+    // Обработчик обновления валидности формы
+    this._events.on<{ isValid: boolean }>(AppEvent.FORM_VALID, (data) => {
+      this.updateValidState(data.isValid);
+    });
+
+    // Обработчик обновления ошибок формы
+    this._events.on<{ errors: string[] }>(AppEvent.FORM_ERRORS, (data) => {
+      this.updateErrors(data.errors);
     });
   }
 }

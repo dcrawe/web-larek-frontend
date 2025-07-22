@@ -9,7 +9,6 @@ export class Basket extends TemplateComponent implements IBasket {
 	private _list: HTMLElement;
 	private _price: HTMLElement;
 	private _button: HTMLButtonElement;
-	private _counter: HTMLElement;
 
 	constructor(private readonly _events: IEvents) {
 		super(TEMPLATE_IDS.BASKET);
@@ -18,7 +17,6 @@ export class Basket extends TemplateComponent implements IBasket {
 		this._list = this._element.querySelector(`.${CLASS_NAMES.BASKET_LIST}`);
 		this._price = this._element.querySelector(`.${CLASS_NAMES.BASKET_PRICE}`);
 		this._button = this._element.querySelector(`.${CLASS_NAMES.BASKET_BUTTON}`);
-		this._counter = document.querySelector(`.${CLASS_NAMES.HEADER_BASKET_COUNTER}`);
 
 		if (!this._list || !this._price || !this._button) {
 			throw new Error('Не удалось найти обязательные элементы корзины');
@@ -71,11 +69,6 @@ export class Basket extends TemplateComponent implements IBasket {
 
 		// Обновляем общую стоимость
 		this._price.textContent = `${total} синапсов`;
-
-		// Обновляем счетчик в шапке
-		if (this._counter) {
-			this._counter.textContent = String(count);
-		}
 
 		// Обновляем состояние кнопки
 		this._button.disabled = count === 0;

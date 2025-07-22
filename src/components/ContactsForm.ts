@@ -4,13 +4,13 @@ import { IContactsForm, AppEvent } from '../types';
 import { CLASS_NAMES, MESSAGES, REGEX, TEMPLATE_IDS } from '../utils/constants';
 
 export class ContactsForm extends TemplateComponent implements IContactsForm {
-  email: string = '';
-  phone: string = '';
-  isValid: boolean = false;
   private readonly _submitButton: HTMLButtonElement;
   private readonly _emailInput: HTMLInputElement;
   private readonly _phoneInput: HTMLInputElement;
   private readonly _errorElement: HTMLElement;
+  private _email: string = '';
+  private _phone: string = '';
+  private _isValid: boolean = false;
 
   constructor(private readonly _events: IEvents) {
     super(TEMPLATE_IDS.CONTACTS);
@@ -43,58 +43,70 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
   }
 
   /**
+   * Возвращает email пользователя
+   */
+  get email(): string {
+    return this._email;
+  }
+
+  /**
+   * Возвращает телефон пользователя
+   */
+  get phone(): string {
+    return this._phone;
+  }
+
+  /**
+   * Возвращает статус валидности формы
+   */
+  get isValid(): boolean {
+    return this._isValid;
+  }
+
+  /**
    * Устанавливает email
    */
   setEmail(email: string): void {
-    this.email = email;
+    this._email = email;
     this._emailInput.value = email;
 
-    // Проверяем валидность формы
-    this._validateForm();
+    // Отправляем событие для обновления модели
+    this._events.emit(AppEvent.ORDER_CONTACTS_SET, {
+      email: this._email,
+      phone: this._phone
+    });
   }
 
   /**
    * Устанавливает телефон
    */
   setPhone(phone: string): void {
-    this.phone = phone;
+    this._phone = phone;
     this._phoneInput.value = phone;
 
-    // Проверяем валидность формы
-    this._validateForm();
+    // Отправляем событие для обновления модели
+    this._events.emit(AppEvent.ORDER_CONTACTS_SET, {
+      email: this._email,
+      phone: this._phone
+    });
   }
 
   /**
-   * Проверяет валидность формы
+   * Обновляет состояние валидности формы
    */
-  private _validateForm(): void {
-    const errors: string[] = [];
+  updateValidState(isValid: boolean): void {
+    this._isValid = isValid;
+    this._submitButton.disabled = !isValid;
+  }
 
-    // Проверяем, введен ли email
-    if (!this.email.trim()) {
-      errors.push(MESSAGES.EMAIL_REQUIRED);
-    } else if (!REGEX.EMAIL.test(this.email)) {
-      errors.push(MESSAGES.INVALID_EMAIL);
-    }
-
-    // Проверяем, введен ли телефон
-    if (!this.phone.trim()) {
-      errors.push(MESSAGES.PHONE_REQUIRED);
-    } else if (!REGEX.PHONE.test(this.phone)) {
-      errors.push(MESSAGES.INVALID_PHONE);
-    }
-
-    // Устанавливаем статус валидности
-    this.isValid = errors.length === 0;
-    this._submitButton.disabled = !this.isValid;
-
-    // Отображаем ошибки, если они есть
+  /**
+   * Обновляет отображение ошибок
+   */
+  updateErrors(errors: string[]): void {
     if (errors.length > 0) {
       this._errorElement.textContent = errors.join('. ');
-      this._events.emit(AppEvent.FORM_ERRORS, { errors });
     } else {
       this._errorElement.textContent = '';
-      this._events.emit(AppEvent.FORM_VALID);
     }
   }
 
@@ -106,11 +118,8 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
     this._element.addEventListener('submit', (event) => {
       event.preventDefault();
 
-      if (this.isValid) {
-        this._events.emit(AppEvent.ORDER_CONTACTS_SET, {
-          email: this.email,
-          phone: this.phone
-        });
+      if (this._isValid) {
+        this._events.emit(AppEvent.ORDER_SUBMIT);
       }
     });
 
@@ -122,6 +131,16 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
     // Обработчик изменения телефона
     this._phoneInput.addEventListener('input', () => {
       this.setPhone(this._phoneInput.value);
+    });
+
+    // Обработчик обновления валидности формы
+    this._events.on<{ isValid: boolean }>(AppEvent.FORM_VALID, (data) => {
+      this.updateValidState(data.isValid);
+    });
+
+    // Обработчик обновления ошибок формы
+    this._events.on<{ errors: string[] }>(AppEvent.FORM_ERRORS, (data) => {
+      this.updateErrors(data.errors);
     });
   }
 }
