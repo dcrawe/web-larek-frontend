@@ -4,6 +4,7 @@ import { BasketModel, ProductModel, OrderModel } from '../models';
 import { AppEvent, IPresenter, IView, IOrderDTO } from '../types';
 import { Basket, Catalog, ContactsForm, ProductPreview, OrderForm, Modal, Success } from '../components';
 import { CLASS_NAMES } from '../utils/constants';
+import { BasketCounter } from '../components/BasketCounter';
 
 /**
  * Главный презентер приложения
@@ -22,6 +23,7 @@ export class AppPresenter implements IPresenter {
   private readonly _contactsForm: ContactsForm;
   private readonly _success: Success;
   private _basketButton: HTMLElement;
+	private _basketCounter: BasketCounter;
 
   constructor() {
     // Инициализация брокера событий
@@ -34,6 +36,7 @@ export class AppPresenter implements IPresenter {
     this._productModel = new ProductModel(this._eventEmitter);
     this._basketModel = new BasketModel(this._eventEmitter);
     this._orderModel = new OrderModel(this._eventEmitter);
+		this._basketCounter = new BasketCounter(this._eventEmitter);
 
     // Инициализация компонентов представления
     this._modal = new Modal(this._eventEmitter);
