@@ -175,5 +175,10 @@ export class AppPresenter implements IPresenter {
         console.error('Ошибка при оформлении заказа:', error);
       }
     });
+
+		this._eventEmitter.on(AppEvent.ORDER_SUBMIT, () => {
+			// Открываем модальное окно с формой контактов
+			this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._contactsForm.render() });
+		});
   }
 }

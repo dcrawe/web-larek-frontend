@@ -13,7 +13,7 @@ export const CLASS_NAMES = {
   PAGE_WRAPPER: 'page__wrapper',
   BUTTON: 'button',
   BUTTON_ALT: 'button_alt',
-  BUTTON_SELECTED: 'button_selected',
+  BUTTON_SELECTED: 'button_alt-active',
 
   // Шапка
   HEADER: 'header',
