@@ -41,6 +41,7 @@ export const enum AppEvent {
 	ORDER_FORM_ERRORS = 'order:form:errors',
 	CONTACTS_FORM_VALID = 'contacts:form:valid',
 	CONTACTS_FORM_ERRORS = 'contacts:form:errors',
+	ORDER_CLEAR = 'order:clear',
 }
 
 // Интерфейсы для событий

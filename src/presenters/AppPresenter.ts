@@ -1,10 +1,9 @@
-import { EventEmitter } from '../components';
+import { EventEmitter, BasketCounter } from '../components';
 import { ApiService } from '../services/ApiService';
 import { BasketModel, ProductModel, OrderModel } from '../models';
 import { AppEvent, IPresenter, IView, IOrderDTO } from '../types';
 import { Basket, Catalog, ContactsForm, ProductPreview, OrderForm, Modal, Success } from '../components';
 import { CLASS_NAMES } from '../utils/constants';
-import { BasketCounter } from '../components/BasketCounter';
 
 /**
  * Главный презентер приложения
@@ -42,8 +41,8 @@ export class AppPresenter implements IPresenter {
     this._modal = new Modal(this._eventEmitter);
     this._catalog = new Catalog(this._eventEmitter);
     this._basket = new Basket(this._eventEmitter);
-    this._orderForm = new OrderForm(this._eventEmitter);
-    this._contactsForm = new ContactsForm(this._eventEmitter);
+		this._orderForm = new OrderForm(this._eventEmitter, this._orderModel);
+		this._contactsForm = new ContactsForm(this._eventEmitter, this._orderModel);
     this._success = new Success(this._eventEmitter);
 
     // Инициализация представления
@@ -169,6 +168,9 @@ export class AppPresenter implements IPresenter {
 					// Очищаем корзину и заказ после успешного оформления
 					this._basketModel.clear();
 					this._orderModel.clear();
+
+					// Отправляем событие для очистки форм
+					this._eventEmitter.emit(AppEvent.ORDER_CLEAR);
 
 					// Оповещаем об успешном оформлении заказа
 					this._eventEmitter.emit(AppEvent.ORDER_SUCCESS, {
