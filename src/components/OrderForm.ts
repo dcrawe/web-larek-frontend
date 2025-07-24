@@ -78,7 +78,7 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 		const errors: string[] = [];
 
 		if (!this._address.trim()) {
-			errors.push('Укажите адрес доставки');
+			errors.push('Необходимо указать адрес');
 		}
 
 		if (!this._paymentMethod) {

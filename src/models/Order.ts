@@ -1,11 +1,12 @@
 import { IEvents } from '../components';
 import { PaymentMethod } from '../types';
 import { AppEvent } from '../types';
+import { REGEX } from '../utils/constants';
 
 export class OrderModel {
-	private _address: string = '';
-	private _email: string = '';
-	private _phone: string = '';
+	private _address = '';
+	private _email = '';
+	private _phone = '';
 	private _paymentMethod: PaymentMethod | null = null;
 
 	constructor(private readonly _events: IEvents) {
@@ -17,6 +18,23 @@ export class OrderModel {
 	 */
 	setAddress(address: string): void {
 		this._address = address;
+		this._validateOrder();
+	}
+
+	/**
+	 * Устанавливает email
+	 */
+	setEmail(email: string): void {
+		this._email = email;
+		this._validateOrder();
+	}
+
+	/**
+	 * Устанавливает телефон
+	 */
+	setPhone(phone: string): void {
+		this._phone = phone;
+		this._validateOrder();
 	}
 
 	/**
@@ -25,6 +43,7 @@ export class OrderModel {
 	setContacts(email: string, phone: string): void {
 		this._email = email;
 		this._phone = phone;
+		this._validateOrder();
 	}
 
 	/**
@@ -32,6 +51,7 @@ export class OrderModel {
 	 */
 	setPaymentMethod(method: PaymentMethod): void {
 		this._paymentMethod = method;
+		this._validateOrder();
 	}
 
 	/**
@@ -63,13 +83,74 @@ export class OrderModel {
 	}
 
 	/**
+	 * Валидирует email
+	 */
+	private _isEmailValid(): boolean {
+		return Boolean(this._email.trim() && REGEX.EMAIL.test(this._email));
+	}
+
+	/**
+	 * Валидирует телефон
+	 */
+	private _isPhoneValid(): boolean {
+		return Boolean(this._phone.trim() && REGEX.PHONE.test(this._phone));
+	}
+
+	/**
+	 * Валидирует адрес
+	 */
+	private _isAddressValid(): boolean {
+		return Boolean(this._address.trim());
+	}
+
+	/**
+	 * Валидирует заказ и отправляет соответствующие события
+	 */
+	private _validateOrder(): void {
+		const errors: string[] = [];
+
+		if (!this._isAddressValid()) {
+			errors.push('Необходимо указать адрес');
+		}
+
+		if (!this._isEmailValid()) {
+			if (!this._email.trim()) {
+				errors.push('Необходимо указать email');
+			} else {
+				errors.push('Указан некорректный email');
+			}
+		}
+
+		if (!this._isPhoneValid()) {
+			if (!this._phone.trim()) {
+				errors.push('Необходимо указать телефон');
+			} else {
+				errors.push('Указан некорректный формат телефона');
+			}
+		}
+
+		if (!this._paymentMethod) {
+			errors.push('Выберите способ оплаты');
+		}
+
+		const isValid = errors.length === 0;
+
+		// Отправляем события для обработки внешними компонентами
+		this._events.emit(AppEvent.FORM_VALID, { isValid });
+
+		if (!isValid) {
+			this._events.emit(AppEvent.FORM_ERRORS, { errors });
+		}
+	}
+
+	/**
 	 * Проверяет, заполнены ли все обязательные поля
 	 */
 	isValid(): boolean {
 		return !!(
-			this._address &&
-			this._email &&
-			this._phone &&
+			this._isAddressValid() &&
+			this._isEmailValid() &&
+			this._isPhoneValid() &&
 			this._paymentMethod
 		);
 	}

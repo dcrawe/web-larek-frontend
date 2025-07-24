@@ -140,41 +140,49 @@ export class AppPresenter implements IPresenter {
       this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._orderForm.render() });
     });
 
-    // Обработчик завершения первого шага оформления заказа
-    this._eventEmitter.on(AppEvent.ORDER_ADDRESS_SET, (data) => {
-      // Если выбран способ оплаты и указан адрес, переходим ко второму шагу
-      if (this._orderModel.isValid() && this._basketModel.getItemCount() > 0) {
-        this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._contactsForm.render() });
-      }
-    });
+// Обновленный обработчик изменения контактных данных
+		this._eventEmitter.on<{ email: string; phone: string }>(AppEvent.ORDER_CONTACTS_SET, (data) => {
+			// Только обновляем модель, но не отправляем заказ
+			this._orderModel.setContacts(data.email, data.phone);
 
-    // Обработчик завершения второго шага оформления заказа
-    this._eventEmitter.on(AppEvent.ORDER_CONTACTS_SET, async (data) => {
-      try {
-        // Презентер создает объект заказа, собирая данные из разных моделей
-        const orderDTO = this._createOrderDTO();
+			// Валидируем форму, если нужно
+			if (this._orderModel.isValid()) {
+				this._contactsForm.updateValidState(true);
+			}
+		});
 
-        if (orderDTO) {
-          // Отправляем заказ на сервер
-          const response = await this._api.createOrder(orderDTO);
+		// Новый обработчик подтверждения заказа
+		this._eventEmitter.on(AppEvent.ORDER_CONFIRM, async () => {
+			try {
+				// Проверяем валидность модели заказа
+				if (!this._orderModel.isValid()) {
+					return;
+				}
 
-          // Очищаем корзину и заказ после успешного оформления
-          this._basketModel.clear();
-          this._orderModel.clear();
+				// Создаем объект заказа
+				const orderDTO = this._createOrderDTO();
 
-          // Оповещаем об успешном оформлении заказа
-          this._eventEmitter.emit(AppEvent.ORDER_SUCCESS, {
-            orderId: response.id,
-            total: response.total
-          });
+				if (orderDTO) {
+					// Отправляем заказ на сервер
+					const response = await this._api.createOrder(orderDTO);
 
-          // Открываем модальное окно с сообщением об успешном оформлении заказа
-          this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._success.render() });
-        }
-      } catch (error) {
-        console.error('Ошибка при оформлении заказа:', error);
-      }
-    });
+					// Очищаем корзину и заказ после успешного оформления
+					this._basketModel.clear();
+					this._orderModel.clear();
+
+					// Оповещаем об успешном оформлении заказа
+					this._eventEmitter.emit(AppEvent.ORDER_SUCCESS, {
+						orderId: response.id,
+						total: response.total
+					});
+
+					// Открываем модальное окно с сообщением об успешном оформлении заказа
+					this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._success.render() });
+				}
+			} catch (error) {
+				console.error('Ошибка при оформлении заказа:', error);
+			}
+		});
 
 		this._eventEmitter.on(AppEvent.ORDER_SUBMIT, () => {
 			// Открываем модальное окно с формой контактов
