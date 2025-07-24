@@ -72,32 +72,6 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 	}
 
 	/**
-	 * Проверяет валидность формы и обновляет состояние
-	 */
-	private _validateForm(): void {
-		const errors: string[] = [];
-
-		if (!this._address.trim()) {
-			errors.push('Необходимо указать адрес');
-		}
-
-		if (!this._paymentMethod) {
-			errors.push('Выберите способ оплаты');
-		}
-
-		const isValid = errors.length === 0;
-
-		this.updateValidState(isValid);
-		this.updateErrors(errors);
-
-		// Отправляем события для возможной обработки внешними компонентами
-		this._events.emit(AppEvent.FORM_VALID, { isValid });
-		if (!isValid) {
-			this._events.emit(AppEvent.FORM_ERRORS, { errors });
-		}
-	}
-
-	/**
 	 * Устанавливает способ оплаты
 	 */
 	setPaymentMethod(method: PaymentMethod): void {
@@ -117,9 +91,6 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 
 		// Отправляем событие выбора способа оплаты
 		this._events.emit(AppEvent.ORDER_PAYMENT_SELECT, { method: method });
-
-		// Проверяем валидность формы после изменения
-		this._validateForm();
 	}
 
 	/**
@@ -131,9 +102,6 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 
 		// Отправляем событие установки адреса
 		this._events.emit(AppEvent.ORDER_ADDRESS_SET, { address: address });
-
-		// Проверяем валидность формы после изменения
-		this._validateForm();
 	}
 
 	/**
@@ -181,13 +149,13 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 			});
 		});
 
-		// Обработчик обновления валидности формы
-		this._events.on<{ isValid: boolean }>(AppEvent.FORM_VALID, (data) => {
+		// Обработчик обновления валидности формы заказа
+		this._events.on<{ isValid: boolean }>(AppEvent.ORDER_FORM_VALID, (data) => {
 			this.updateValidState(data.isValid);
 		});
 
-		// Обработчик обновления ошибок формы
-		this._events.on<{ errors: string[] }>(AppEvent.FORM_ERRORS, (data) => {
+		// Обработчик обновления ошибок формы заказа
+		this._events.on<{ errors: string[] }>(AppEvent.ORDER_FORM_ERRORS, (data) => {
 			this.updateErrors(data.errors);
 		});
 	}

@@ -37,6 +37,10 @@ export const enum AppEvent {
 	// События формы
 	FORM_ERRORS = 'form:errors',
 	FORM_VALID = 'form:valid',
+	ORDER_FORM_VALID = 'order:form:valid',
+	ORDER_FORM_ERRORS = 'order:form:errors',
+	CONTACTS_FORM_VALID = 'contacts:form:valid',
+	CONTACTS_FORM_ERRORS = 'contacts:form:errors',
 }
 
 // Интерфейсы для событий
@@ -103,6 +107,22 @@ export interface IFormErrorsEvent {
 	errors: string[];
 }
 
+export interface IOrderFormValidEvent {
+	isValid: boolean;
+}
+
+export interface IOrderFormErrorsEvent {
+	errors: string[];
+}
+
+export interface IContactsFormValidEvent {
+	isValid: boolean;
+}
+
+export interface IContactsFormErrorsEvent {
+	errors: string[];
+}
+
 export interface IEventPayloadMap {
 	[AppEvent.PRODUCTS_LOADED]: IProductsLoadedEvent;
 	[AppEvent.CARDS_LOADED]: ICardsLoadedEvent;
@@ -123,6 +143,12 @@ export interface IEventPayloadMap {
 	[AppEvent.ORDER_SUCCESS]: IOrderSuccessEvent;
 	[AppEvent.MODAL_OPEN]: IModalOpenEvent;
 	[AppEvent.MODAL_CLOSE]: Record<string, never>;
+	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
+	[AppEvent.FORM_VALID]: Record<string, never>;
+	[AppEvent.ORDER_FORM_VALID]: IOrderFormValidEvent;
+	[AppEvent.ORDER_FORM_ERRORS]: IOrderFormErrorsEvent;
+	[AppEvent.CONTACTS_FORM_VALID]: IContactsFormValidEvent;
+	[AppEvent.CONTACTS_FORM_ERRORS]: IContactsFormErrorsEvent;
 	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
 	[AppEvent.FORM_VALID]: Record<string, never>;
 }
