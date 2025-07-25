@@ -97,6 +97,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 	 updateValidState(isValid: boolean): void {
 			 this._isValid = isValid;
 			 this._submitButton.disabled = !isValid;
+			 this.updateErrors([]);
 	 }
 
 	 /**

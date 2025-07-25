@@ -1,6 +1,7 @@
 import { Observable } from './base/Observable';
 import { IEvents } from '../components';
 import { IProduct, IProductDTO, AppEvent } from '../types';
+import { CDN_URL } from '../utils/constants';
 
 export class ProductModel extends Observable {
 	private _products: IProduct[] = [];
@@ -17,7 +18,7 @@ export class ProductModel extends Observable {
 		return {
 			id: dto.id,
 			description: dto.description,
-			image: dto.image,
+			image: `${CDN_URL}/${dto.image}`,
 			title: dto.title,
 			category: dto.category as any,
 			price: dto.price || 0

@@ -109,6 +109,7 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 		updateValidState(isValid: boolean): void {
 				this._isValid = isValid;
 				this._submitButton.disabled = !isValid;
+				this.updateErrors([]);
 		}
 
 		/**
