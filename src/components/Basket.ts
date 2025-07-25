@@ -1,11 +1,9 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { IBasket, AppEvent, IProduct } from '../types';
+import { AppEvent, IProduct } from '../types';
 import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
 
-export class Basket extends TemplateComponent implements IBasket {
-	readonly items: Map<string, IProduct> = new Map();
-	readonly total: number = 0;
+export class Basket extends TemplateComponent {
 	private _list: HTMLElement;
 	private _price: HTMLElement;
 	private _button: HTMLButtonElement;

@@ -34,12 +34,6 @@ export interface ICatalog extends ITemplateComponent {
 	clear(): void;
 }
 
-// Интерфейс для корзины
-export interface IBasket extends ITemplateComponent {
-	readonly items: Map<string, IProduct>;
-	readonly total: number;
-}
-
 // Интерфейс для формы заказа
 export interface IOrderForm extends ITemplateComponent {
 	readonly paymentMethod: PaymentMethod | null;
