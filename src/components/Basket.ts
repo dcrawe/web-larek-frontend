@@ -22,6 +22,8 @@ export class Basket extends TemplateComponent implements IBasket {
 			throw new Error('Не удалось найти обязательные элементы корзины');
 		}
 
+		this._button.disabled = true;
+
 		this._initEventListeners();
 	}
 
@@ -71,7 +73,7 @@ export class Basket extends TemplateComponent implements IBasket {
 		this._price.textContent = `${total} синапсов`;
 
 		// Обновляем состояние кнопки
-		this._button.disabled = count === 0;
+		this._button.disabled = count === 0 || total === 0;
 	}
 
 	/**

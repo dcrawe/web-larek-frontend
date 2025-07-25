@@ -27,7 +27,7 @@ export abstract class AbstractProductView extends TemplateComponent implements I
     // Устанавливаем цену товара
     const priceElement = this._element.querySelector(`.${CLASS_NAMES.CARD_PRICE}`);
     if (priceElement) {
-      priceElement.textContent = `${this.product.price} синапсов`;
+			priceElement.textContent = this.product.price ? `${this.product.price} синапсов` : 'Бесценно';
     }
 
     // Устанавливаем изображение товара

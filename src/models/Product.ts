@@ -20,7 +20,7 @@ export class ProductModel extends Observable {
 			image: dto.image,
 			title: dto.title,
 			category: dto.category as any,
-			price: dto.price
+			price: dto.price || 0
 		};
 	}
 
