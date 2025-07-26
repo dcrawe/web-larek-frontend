@@ -9,18 +9,22 @@ export class Catalog extends Component implements ICatalog {
 	readonly container: HTMLElement;
 	readonly cards: ProductCard[] = [];
 
-	constructor(private readonly _events: IEvents, containerSelector: string = `.${CLASS_NAMES.GALLERY}`) {
+	constructor(
+		private readonly _events: IEvents,
+		private readonly _getProduct: (id: string) => IProduct | null,
+		containerSelector: string = `.${CLASS_NAMES.GALLERY}`
+	) {
 		super();
 
-		// Находим контейнер галереи в DOM
 		const gallery = document.querySelector(containerSelector);
+
 		if (!gallery) {
 			throw new Error(`Контейнер с селектором ${containerSelector} не найден`);
 		}
+
 		this._element = gallery as HTMLElement;
 		this.container = document.body;
 
-		// Подписываемся на события
 		this._initEventListeners();
 	}
 
@@ -36,21 +40,20 @@ export class Catalog extends Component implements ICatalog {
 	 * Устанавливает набор карточек в каталоге
 	 */
 	setCards(cards: ProductCard[]): void {
-		// Очищаем текущий список карточек
 		this._element.innerHTML = '';
 		this.cards.length = 0;
 
-		// Добавляем новые карточки
-		cards.forEach(card => {
-			this.addCard(card);
-		});
+		cards.forEach(card => this.addCard(card));
 	}
 
 	/**
 	 * Создает карточки из продуктов
 	 */
 	private _createCards(products: IProduct[]): void {
-		const cards = products.map(product => new ProductCard(product, this._events));
+		const cards = products.map(product =>
+			new ProductCard(product.id, this._events, this._getProduct)
+		);
+
 		this.setCards(cards);
 	}
 
@@ -59,8 +62,10 @@ export class Catalog extends Component implements ICatalog {
 	 */
 	removeCard(card: ProductCard): void {
 		const index = this.cards.indexOf(card);
+
 		if (index !== -1) {
 			this.cards.splice(index, 1);
+
 			card.render().remove();
 		}
 	}

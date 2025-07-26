@@ -23,6 +23,7 @@ export interface IModal extends ITemplateComponent {
 // Интерфейс для карточки товара
 export interface IProductCard extends ITemplateComponent {
 	readonly product: IProduct;
+	update(): void;
 }
 
 // Интерфейс для каталога товаров

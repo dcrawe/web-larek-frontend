@@ -5,7 +5,6 @@ import { CDN_URL } from '../utils/constants';
 
 export class ProductModel extends Observable {
 	private _products: IProduct[] = [];
-	private _selectedProduct: IProduct | null = null;
 
 	constructor(events: IEvents) {
 		super(events);
@@ -26,26 +25,17 @@ export class ProductModel extends Observable {
 	}
 
 	/**
-	 * Загружает список продуктов из массива DTO
+	 * Устанавливает список товаров
 	 */
-	setProducts(productsDTO: IProductDTO[]): void {
+	setProducts(productsDTO: IProduct[]): void {
 		this._products = productsDTO.map(dto => this.mapProduct(dto));
-		this._notifyChange(AppEvent.PRODUCTS_LOADED, {
-			products: this._products
-		});
+		this._notifyChange(AppEvent.PRODUCTS_LOADED, { products: this._products });
 	}
 
 	/**
-	 * Возвращает список всех продуктов
+	 * Получает товар по ID
 	 */
-	getProducts(): IProduct[] {
-		return [...this._products];
-	}
-
-	/**
-	 * Находит продукт по ID
-	 */
-	getProductById(id: string): IProduct | undefined {
-		return this._products.find(product => product.id === id);
+	getProduct(id: string): IProduct | null {
+		return this._products.find(product => product.id === id) || null;
 	}
 }

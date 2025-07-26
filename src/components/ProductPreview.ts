@@ -3,45 +3,59 @@ import { AppEvent, IProduct } from '../types';
 import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
 import { AbstractProductView } from './base/AbstractProductView';
 
-  export class ProductPreview extends AbstractProductView {
-  private readonly _addButton: HTMLButtonElement;
+export class ProductPreview extends AbstractProductView {
+	private readonly _addButton: HTMLButtonElement;
 
-  constructor(product: IProduct, events: IEvents) {
-    super(product, events, TEMPLATE_IDS.CARD_PREVIEW);
+	constructor(
+		productId: string,
+		events: IEvents,
+		getProduct: (id: string) => IProduct | null,
+		private readonly _isInBasket: (productId: string) => boolean
+	) {
+		super(productId, events, TEMPLATE_IDS.CARD_PREVIEW, getProduct);
 
-    // Находим кнопку добавления в корзину
-    this._addButton = this._element.querySelector(`.${CLASS_NAMES.CARD_BUTTON}`) as HTMLButtonElement;
-    if (!this._addButton) {
-      throw new Error('Кнопка добавления в корзину не найдена');
-    }
+		this._addButton = this._element.querySelector(`.${CLASS_NAMES.CARD_BUTTON}`) as HTMLButtonElement;
 
-    this.renderProductInfo();
-    this.initEvents();
-  }
+		if (!this._addButton) {
+			throw new Error('Кнопка добавления в корзину не найдена');
+		}
 
-  /**
-   * Обновляет состояние кнопки добавления в корзину
-   * @param isInBasket - находится ли товар в корзине
-   */
-  updateAddButton(isInBasket: boolean): void {
-    super.updateAddButton(isInBasket, this._addButton);
-  }
+		this.renderProductInfo();
+		this.updateAddButtonState();
+		this.initEvents();
+	}
 
-  /**
-   * Инициализирует обработчики событий
-   */
-  protected initEvents(): void {
-    // Обработчик клика по кнопке добавления/удаления из корзины
-    this._addButton.addEventListener('click', () => {
-      if (this._addButton.textContent === 'Убрать') {
-        // Если товар в корзине - удаляем его
-        this._events.emit(AppEvent.BASKET_REMOVE, { productId: this.product.id });
-        this.updateAddButton(false);
-      } else {
-        // Если товара нет в корзине - добавляем его
-        this._events.emit(AppEvent.BASKET_ADD, { product: this.product });
-        this.updateAddButton(true);
-      }
-    });
-  }
+	/**
+	 * Обновляет компонент и состояние кнопки
+	 */
+	update(): void {
+		super.update();
+
+		this.updateAddButtonState();
+	}
+
+	/**
+	 * Обновляет состояние кнопки на основе текущего состояния корзины
+	 */
+	private updateAddButtonState(): void {
+		const isInBasket = this._isInBasket(this._productId);
+
+		this.updateAddButton(isInBasket, this._addButton);
+	}
+
+	/**
+	 * Инициализирует обработчики событий
+	 */
+	protected initEvents(): void {
+		// Обработчик клика по кнопке добавления/удаления из корзины
+		this._addButton.addEventListener('click', () => {
+			if (this._isInBasket(this._productId)) {
+				this._events.emit(AppEvent.BASKET_REMOVE, { productId: this._productId });
+			} else {
+				this._events.emit(AppEvent.BASKET_ADD, { productId: this._productId });
+			}
+
+			this.updateAddButtonState();
+		});
+	}
 }

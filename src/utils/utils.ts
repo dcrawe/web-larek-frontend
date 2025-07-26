@@ -133,3 +133,32 @@ export function createElement<
     }
     return element;
 }
+
+import { ProductCategory } from '../types';
+
+/**
+ * Проверяет, является ли строка валидной категорией товара
+ */
+export function isValidProductCategory(category: string): category is ProductCategory {
+	const validCategories: ProductCategory[] = [
+		'софт-скил',
+		'хард-скил',
+		'другое',
+		'кнопка',
+		'дополнительное'
+	];
+	return validCategories.includes(category as ProductCategory);
+}
+
+/**
+ * Безопасно преобразует строку в ProductCategory
+ */
+export function toProductCategory(category: string): ProductCategory {
+	if (isValidProductCategory(category)) {
+		return category;
+	}
+
+	console.warn(`Неизвестная категория товара: ${category}, используется 'другое'`);
+
+	return 'другое';
+}
