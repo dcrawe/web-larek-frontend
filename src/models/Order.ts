@@ -1,242 +1,255 @@
 import { IEvents } from '../components';
-	 import { PaymentMethod } from '../types';
-	 import { AppEvent } from '../types';
-	 import { ERROR_MESSAGES, REGEX } from '../utils/constants';
+import { PaymentMethod } from '../types';
+import { AppEvent } from '../types';
+import { ERROR_MESSAGES, REGEX } from '../utils/constants';
 
-	 export class OrderModel {
-	 	private _address = '';
-	 	private _email = '';
-	 	private _phone = '';
-	 	private _paymentMethod: PaymentMethod | null = null;
+export class OrderModel {
+	private _address = '';
+	private _email = '';
+	private _phone = '';
+	private _paymentMethod: PaymentMethod | null = null;
 
-	 	constructor(private readonly _events: IEvents) {
-	 		this._initEventListeners();
-	 	}
+	constructor(private readonly _events: IEvents) {
+		this._initEventListeners();
+	}
 
-	 	/**
-	 	 * Устанавливает адрес доставки
-	 	 */
-	 	setAddress(address: string): void {
-	 		this._address = address;
-	 		this._validateOrder();
-	 		this._validateOrderForm();
-	 	}
+	/**
+	 * Устанавливает адрес доставки
+	 */
+	setAddress(address: string): void {
+		this._address = address;
+		this._validateOrder();
+		this._validateOrderForm();
+	}
 
-	 	/**
-	 	 * Устанавливает email
-	 	 */
-	 	setEmail(email: string): void {
-	 		this._email = email;
-	 		this._validateOrder();
-	 		this._validateContactsForm();
-	 	}
+	/**
+	 * Устанавливает email
+	 */
+	setEmail(email: string): void {
+		this._email = email;
+		this._validateOrder();
+		this._validateContactsForm();
+	}
 
-	 	/**
-	 	 * Устанавливает телефон
-	 	 */
-	 	setPhone(phone: string): void {
-	 		this._phone = phone;
-	 		this._validateOrder();
-	 		this._validateContactsForm();
-	 	}
+	/**
+	 * Устанавливает телефон
+	 */
+	setPhone(phone: string): void {
+		this._phone = phone;
+		this._validateOrder();
+		this._validateContactsForm();
+	}
 
-	 	/**
-	 	 * Устанавливает контактные данные
-	 	 */
-	 	setContacts(email: string, phone: string): void {
-	 		this._email = email;
-	 		this._phone = phone;
-	 		this._validateOrder();
-	 		this._validateContactsForm();
-	 	}
+	/**
+	 * Устанавливает контактные данные
+	 */
+	setContacts(email: string, phone: string): void {
+		this._email = email;
+		this._phone = phone;
+		this._validateOrder();
+		this._validateContactsForm();
+	}
 
-	 	/**
-	 	 * Устанавливает способ оплаты
-	 	 */
-	 	setPaymentMethod(method: PaymentMethod): void {
-	 		this._paymentMethod = method;
-	 		this._validateOrder();
-	 		this._validateOrderForm();
-	 	}
+	/**
+	 * Устанавливает способ оплаты
+	 */
+	setPaymentMethod(method: PaymentMethod): void {
+		this._paymentMethod = method;
+		this._validateOrder();
+		this._validateOrderForm();
+	}
 
-	 	/**
-	 	 * Возвращает адрес доставки
-	 	 */
-	 	getAddress(): string {
-	 		return this._address;
-	 	}
+	/**
+	 * Возвращает адрес доставки
+	 */
+	getAddress(): string {
+		return this._address;
+	}
 
-	 	/**
-	 	 * Возвращает email
-	 	 */
-	 	getEmail(): string {
-	 		return this._email;
-	 	}
+	/**
+	 * Возвращает email
+	 */
+	getEmail(): string {
+		return this._email;
+	}
 
-	 	/**
-	 	 * Возвращает номер телефона
-	 	 */
-	 	getPhone(): string {
-	 		return this._phone;
-	 	}
+	/**
+	 * Возвращает номер телефона
+	 */
+	getPhone(): string {
+		return this._phone;
+	}
 
-	 	/**
-	 	 * Возвращает способ оплаты
-	 	 */
-	 	getPaymentMethod(): PaymentMethod | null {
-	 		return this._paymentMethod;
-	 	}
+	/**
+	 * Возвращает способ оплаты
+	 */
+	getPaymentMethod(): PaymentMethod | null {
+		return this._paymentMethod;
+	}
 
-	 	/**
-	 	 * Валидирует email
-	 	 */
-	 	private _isEmailValid(): boolean {
-	 		return Boolean(this._email.trim() && REGEX.EMAIL.test(this._email));
-	 	}
+	/**
+	 * Валидирует email
+	 */
+	private _isEmailValid(): boolean {
+		return Boolean(this._email.trim() && REGEX.EMAIL.test(this._email));
+	}
 
-	 	/**
-	 	 * Валидирует телефон
-	 	 */
-	 	private _isPhoneValid(): boolean {
-	 		return Boolean(this._phone.trim() && REGEX.PHONE.test(this._phone));
-	 	}
+	/**
+	 * Валидирует телефон
+	 */
+	private _isPhoneValid(): boolean {
+		return Boolean(this._phone.trim() && REGEX.PHONE.test(this._phone));
+	}
 
-	 	/**
-	 	 * Валидирует адрес
-	 	 */
-	 	private _isAddressValid(): boolean {
-	 		return Boolean(this._address.trim());
-	 	}
+	/**
+	 * Валидирует адрес
+	 */
+	private _isAddressValid(): boolean {
+		return Boolean(this._address.trim());
+	}
 
-	 	/**
-	 	 * Валидирует форму заказа и отправляет соответствующие события
-	 	 */
-	 	private _validateOrderForm(): void {
-	 		const errors: string[] = [];
+	/**
+	 * Получает ошибки валидации контактов
+	 */
+	private _getContactsValidationErrors(): string[] {
+		const errors: string[] = [];
 
-	 		if (!this._isAddressValid()) {
-	 			errors.push(ERROR_MESSAGES.ADDRESS_REQUIRED);
-	 		}
-
-	 		if (!this._paymentMethod) {
-	 			errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
-	 		}
-
-	 		const isValid = errors.length === 0;
-
-	 		this._events.emit(AppEvent.ORDER_FORM_VALID, { isValid });
-
-	 		if (!isValid) {
-	 			this._events.emit(AppEvent.ORDER_FORM_ERRORS, { errors });
-	 		}
-	 	}
-
-	 	/**
-	 	 * Валидирует форму контактов и отправляет соответствующие события
-	 	 */
-	 	private _validateContactsForm(): void {
-	 		const errors: string[] = [];
-
-	 		if (!this._isEmailValid()) {
-	 			if (!this._email.trim()) {
+		if (!this._isPhoneValid() && !this._isEmailValid()) {
+			errors.push(ERROR_MESSAGES.PHONE_REQUIRED);
+		} else {
+			if (!this._isEmailValid()) {
+				if (!this._email.trim()) {
 					errors.push(ERROR_MESSAGES.EMAIL_REQUIRED);
-	 			} else {
+				} else {
 					errors.push(ERROR_MESSAGES.INVALID_EMAIL);
-	 			}
-	 		}
+				}
+			}
 
-	 		if (!this._isPhoneValid()) {
-	 			if (!this._phone.trim()) {
+			if (!this._isPhoneValid()) {
+				if (!this._phone.trim()) {
 					errors.push(ERROR_MESSAGES.PHONE_REQUIRED);
-	 			} else {
+				} else {
 					errors.push(ERROR_MESSAGES.INVALID_PHONE);
-	 			}
-	 		}
+				}
+			}
+		}
 
-	 		const isValid = errors.length === 0;
+		return errors;
+	}
 
-	 		this._events.emit(AppEvent.CONTACTS_FORM_VALID, { isValid });
+	/**
+	 * Общий метод для валидации и отправки событий
+	 */
+	private _validateAndEmit(
+		validationFn: () => string[],
+		validEvent: AppEvent,
+		errorEvent: AppEvent
+	): void {
+		const errors = validationFn();
+		const isValid = errors.length === 0;
 
-	 		if (!isValid) {
-	 			this._events.emit(AppEvent.CONTACTS_FORM_ERRORS, { errors });
-	 		}
-	 	}
+		this._events.emit(validEvent, { isValid });
 
-	 	/**
-	 	 * Валидирует заказ целиком и отправляет соответствующие события
-	 	 */
-	 	private _validateOrder(): void {
-	 		const isValid = this.isValid();
+		if (!isValid) {
+			this._events.emit(errorEvent, { errors });
+		}
+	}
 
-	 		this._events.emit(AppEvent.FORM_VALID, { isValid });
+	/**
+	 * Валидирует форму заказа и отправляет соответствующие события
+	 */
+	private _validateOrderForm(): void {
+		this._validateAndEmit(
+			() => {
+				const errors: string[] = [];
 
-	 		if (!isValid) {
-	 			const errors: string[] = [];
-
-	 			if (!this._isAddressValid()) {
-	 				errors.push('Необходимо указать адрес');
-	 			}
-
-				if (!this._isEmailValid()) {
-					if (!this._email.trim()) {
-						errors.push(ERROR_MESSAGES.EMAIL_REQUIRED);
-					} else {
-						errors.push(ERROR_MESSAGES.INVALID_EMAIL);
-					}
+				if (!this._isAddressValid()) {
+					errors.push(ERROR_MESSAGES.ADDRESS_REQUIRED);
 				}
 
-				if (!this._isPhoneValid()) {
-					if (!this._phone.trim()) {
-						errors.push(ERROR_MESSAGES.PHONE_REQUIRED);
-					} else {
-						errors.push(ERROR_MESSAGES.INVALID_PHONE);
-					}
-				}
-
-	 			if (!this._paymentMethod) {
+				if (!this._paymentMethod) {
 					errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
-	 			}
+				}
 
-	 			this._events.emit(AppEvent.FORM_ERRORS, { errors });
-	 		}
-	 	}
+				return errors;
+			},
+			AppEvent.ORDER_FORM_VALID,
+			AppEvent.ORDER_FORM_ERRORS
+		);
+	}
 
-	 	/**
-	 	 * Проверяет, заполнены ли все обязательные поля
-	 	 */
-	 	isValid(): boolean {
-	 		return !!(
-	 			this._isAddressValid() &&
-	 			this._isEmailValid() &&
-	 			this._isPhoneValid() &&
-	 			this._paymentMethod
-	 		);
-	 	}
+	/**
+	 * Валидирует форму контактов и отправляет соответствующие события
+	 */
+	private _validateContactsForm(): void {
+		this._validateAndEmit(
+			() => this._getContactsValidationErrors(),
+			AppEvent.CONTACTS_FORM_VALID,
+			AppEvent.CONTACTS_FORM_ERRORS
+		);
+	}
 
-	 	/**
-	 	 * Очищает данные заказа
-	 	 */
-	 	clear(): void {
-	 		this._address = '';
-	 		this._email = '';
-	 		this._phone = '';
-	 		this._paymentMethod = null;
-	 	}
+	/**
+	 * Валидирует заказ целиком и отправляет соответствующие события
+	 */
+	private _validateOrder(): void {
+		const isValid = this.isValid();
 
-	 	/**
-	 	 * Инициализирует обработчики событий
-	 	 */
-	 	private _initEventListeners(): void {
-	 		this._events.on<{ address: string }>(AppEvent.ORDER_ADDRESS_SET, (data) => {
-	 			this.setAddress(data.address);
-	 		});
+		this._events.emit(AppEvent.FORM_VALID, { isValid });
 
-	 		this._events.on<{ email: string, phone: string }>(AppEvent.ORDER_CONTACTS_SET, (data) => {
-	 			this.setContacts(data.email, data.phone);
-	 		});
+		if (!isValid) {
+			const errors: string[] = [];
 
-	 		this._events.on<{ method: PaymentMethod }>(AppEvent.ORDER_PAYMENT_SELECT, (data) => {
-	 			this.setPaymentMethod(data.method);
-	 		});
-	 	}
-	 }
+			if (!this._isAddressValid()) {
+				errors.push(ERROR_MESSAGES.ADDRESS_REQUIRED);
+			}
+
+			errors.push(...this._getContactsValidationErrors());
+
+			if (!this._paymentMethod) {
+				errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
+			}
+
+			this._events.emit(AppEvent.FORM_ERRORS, { errors });
+		}
+	}
+
+	/**
+	 * Проверяет, заполнены ли все обязательные поля
+	 */
+	isValid(): boolean {
+		return !!(
+			this._isAddressValid() &&
+			this._isEmailValid() &&
+			this._isPhoneValid() &&
+			this._paymentMethod
+		);
+	}
+
+	/**
+	 * Очищает данные заказа
+	 */
+	clear(): void {
+		this._address = '';
+		this._email = '';
+		this._phone = '';
+		this._paymentMethod = null;
+	}
+
+	/**
+	 * Инициализирует обработчики событий
+	 */
+	private _initEventListeners(): void {
+		this._events.on<{ address: string }>(AppEvent.ORDER_ADDRESS_SET, (data) => {
+			this.setAddress(data.address);
+		});
+
+		this._events.on<{ email: string, phone: string }>(AppEvent.ORDER_CONTACTS_SET, (data) => {
+			this.setContacts(data.email, data.phone);
+		});
+
+		this._events.on<{ method: PaymentMethod }>(AppEvent.ORDER_PAYMENT_SELECT, (data) => {
+			this.setPaymentMethod(data.method);
+		});
+	}
+}

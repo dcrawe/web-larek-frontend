@@ -145,7 +145,7 @@ export const ERROR_MESSAGES = {
 	// Ошибки валидации
 	ADDRESS_REQUIRED: 'Необходимо указать адрес',
 	EMAIL_REQUIRED: 'Необходимо указать email',
-	PHONE_REQUIRED: 'Необходимо указать телефон',
+	PHONE_REQUIRED: 'Необходимо указать телефон и телефон',
 	PAYMENT_REQUIRED: 'Необходимо выбрать способ оплаты',
 	INVALID_EMAIL: 'Некорректный формат email',
 	INVALID_PHONE: 'Некорректный формат телефона',

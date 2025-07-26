@@ -18,7 +18,7 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 		super(TEMPLATE_IDS.ORDER);
 
 		this._submitButton = this._element.querySelector(
-			FORM_SELECTORS.ORDER_BUTTON
+			FORM_SELECTORS.SUBMIT_BUTTON
 		) as HTMLButtonElement;
 
 		if (!this._submitButton) {
@@ -104,6 +104,9 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 	 * Обновляет состояние валидности формы
 	 */
 	updateValidState(isValid: boolean): void {
+		console.log(12312);
+		console.log(isValid);
+		console.log(this._submitButton);
 		this._isValid = isValid;
 		this._submitButton.disabled = !isValid;
 
