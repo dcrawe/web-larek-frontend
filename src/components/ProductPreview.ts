@@ -1,6 +1,5 @@
-import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { IProductCard, AppEvent, IProduct } from '../types';
+import { AppEvent, IProduct } from '../types';
 import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
 import { AbstractProductView } from './base/AbstractProductView';
 
