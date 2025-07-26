@@ -1,5 +1,6 @@
 import { Component } from './Component';
 import { ITemplateComponent } from '../../types';
+import { ERROR_MESSAGES } from '../../utils/constants';
 
 /**
  * Базовый класс для компонентов с шаблоном
@@ -14,7 +15,7 @@ export abstract class TemplateComponent extends Component implements ITemplateCo
     // Получаем шаблон
     const template = document.getElementById(templateId) as HTMLTemplateElement;
     if (!template) {
-      throw new Error(`Шаблон с id ${templateId} не найден`);
+      throw new Error(ERROR_MESSAGES.TEMPLATE_NOT_FOUND.replace(':template', templateId));
     }
     this.template = template;
 
@@ -22,7 +23,7 @@ export abstract class TemplateComponent extends Component implements ITemplateCo
     const clone = this.template.content.cloneNode(true) as DocumentFragment;
     const element = clone.firstElementChild as HTMLElement;
     if (!element) {
-      throw new Error(`Шаблон с id ${templateId} не содержит элементов`);
+			throw new Error(ERROR_MESSAGES.TEMPLATE_EMPTY.replace(':template', templateId));
     }
     this._element = element;
 
@@ -30,7 +31,7 @@ export abstract class TemplateComponent extends Component implements ITemplateCo
     if (containerSelector) {
       const container = document.querySelector(containerSelector);
       if (!container) {
-        throw new Error(`Контейнер с селектором ${containerSelector} не найден`);
+				throw new Error(ERROR_MESSAGES.CONTAINER_NOT_FOUND.replace(':template', containerSelector));
       }
       this.container = container as HTMLElement;
     } else {

@@ -1,7 +1,7 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
 import { AppEvent, IProduct } from '../types';
-import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 
 export class Basket extends TemplateComponent {
 	private _list: HTMLElement;
@@ -17,7 +17,7 @@ export class Basket extends TemplateComponent {
 		this._button = this._element.querySelector(`.${CLASS_NAMES.BASKET_BUTTON}`);
 
 		if (!this._list || !this._price || !this._button) {
-			throw new Error('Не удалось найти обязательные элементы корзины');
+			throw new Error(ERROR_MESSAGES.BASKET_CONTAINER_NOT_FOUND);
 		}
 
 		this._button.disabled = true;
@@ -29,34 +29,28 @@ export class Basket extends TemplateComponent {
 	 * Обновляет отображение корзины
 	 */
 	private _updateDisplay(items: IProduct[], total: number, count: number): void {
-		// Очищаем список товаров
 		this._list.innerHTML = '';
 
-		// Добавляем товары в список
 		items.forEach((item, index) => {
 			const template = document.getElementById(TEMPLATE_IDS.CARD_BASKET) as HTMLTemplateElement;
 			const clone = template.content.cloneNode(true) as DocumentFragment;
 			const basketItem = clone.firstElementChild as HTMLElement;
 
-			// Устанавливаем индекс товара
 			const indexElement = basketItem.querySelector(`.${CLASS_NAMES.BASKET_ITEM_INDEX}`);
 			if (indexElement) {
 				indexElement.textContent = String(index + 1);
 			}
 
-			// Устанавливаем название товара
 			const titleElement = basketItem.querySelector(`.${CLASS_NAMES.CARD_TITLE}`);
 			if (titleElement) {
 				titleElement.textContent = item.title;
 			}
 
-			// Устанавливаем цену товара
 			const priceElement = basketItem.querySelector(`.${CLASS_NAMES.CARD_PRICE}`);
 			if (priceElement) {
 				priceElement.textContent = `${item.price} синапсов`;
 			}
 
-			// Добавляем обработчик удаления товара
 			const deleteButton = basketItem.querySelector(`.${CLASS_NAMES.BASKET_ITEM_DELETE}`);
 			if (deleteButton) {
 				deleteButton.addEventListener('click', () => {
@@ -67,10 +61,7 @@ export class Basket extends TemplateComponent {
 			this._list.appendChild(basketItem);
 		});
 
-		// Обновляем общую стоимость
 		this._price.textContent = `${total} синапсов`;
-
-		// Обновляем состояние кнопки
 		this._button.disabled = count === 0 || total === 0;
 	}
 

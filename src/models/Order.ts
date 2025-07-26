@@ -1,7 +1,7 @@
 import { IEvents } from '../components';
 	 import { PaymentMethod } from '../types';
 	 import { AppEvent } from '../types';
-	 import { REGEX } from '../utils/constants';
+	 import { ERROR_MESSAGES, REGEX } from '../utils/constants';
 
 	 export class OrderModel {
 	 	private _address = '';
@@ -115,16 +115,15 @@ import { IEvents } from '../components';
 	 		const errors: string[] = [];
 
 	 		if (!this._isAddressValid()) {
-	 			errors.push('Необходимо указать адрес');
+	 			errors.push(ERROR_MESSAGES.ADDRESS_REQUIRED);
 	 		}
 
 	 		if (!this._paymentMethod) {
-	 			errors.push('Выберите способ оплаты');
+	 			errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
 	 		}
 
 	 		const isValid = errors.length === 0;
 
-	 		// Отправляем специфические события для формы заказа
 	 		this._events.emit(AppEvent.ORDER_FORM_VALID, { isValid });
 
 	 		if (!isValid) {
@@ -140,23 +139,22 @@ import { IEvents } from '../components';
 
 	 		if (!this._isEmailValid()) {
 	 			if (!this._email.trim()) {
-	 				errors.push('Необходимо указать email');
+					errors.push(ERROR_MESSAGES.EMAIL_REQUIRED);
 	 			} else {
-	 				errors.push('Указан некорректный email');
+					errors.push(ERROR_MESSAGES.INVALID_EMAIL);
 	 			}
 	 		}
 
 	 		if (!this._isPhoneValid()) {
 	 			if (!this._phone.trim()) {
-	 				errors.push('Необходимо указать телефон');
+					errors.push(ERROR_MESSAGES.PHONE_REQUIRED);
 	 			} else {
-	 				errors.push('Указан некорректный формат телефона');
+					errors.push(ERROR_MESSAGES.INVALID_PHONE);
 	 			}
 	 		}
 
 	 		const isValid = errors.length === 0;
 
-	 		// Отправляем специфические события для формы контактов
 	 		this._events.emit(AppEvent.CONTACTS_FORM_VALID, { isValid });
 
 	 		if (!isValid) {
@@ -170,7 +168,6 @@ import { IEvents } from '../components';
 	 	private _validateOrder(): void {
 	 		const isValid = this.isValid();
 
-	 		// Отправляем общие события валидации (для обратной совместимости)
 	 		this._events.emit(AppEvent.FORM_VALID, { isValid });
 
 	 		if (!isValid) {
@@ -180,24 +177,24 @@ import { IEvents } from '../components';
 	 				errors.push('Необходимо указать адрес');
 	 			}
 
-	 			if (!this._isEmailValid()) {
-	 				if (!this._email.trim()) {
-	 					errors.push('Необходимо указать email');
-	 				} else {
-	 					errors.push('Указан некорректный email');
-	 				}
-	 			}
+				if (!this._isEmailValid()) {
+					if (!this._email.trim()) {
+						errors.push(ERROR_MESSAGES.EMAIL_REQUIRED);
+					} else {
+						errors.push(ERROR_MESSAGES.INVALID_EMAIL);
+					}
+				}
 
-	 			if (!this._isPhoneValid()) {
-	 				if (!this._phone.trim()) {
-	 					errors.push('Необходимо указать телефон');
-	 				} else {
-	 					errors.push('Указан некорректный формат телефона');
-	 				}
-	 			}
+				if (!this._isPhoneValid()) {
+					if (!this._phone.trim()) {
+						errors.push(ERROR_MESSAGES.PHONE_REQUIRED);
+					} else {
+						errors.push(ERROR_MESSAGES.INVALID_PHONE);
+					}
+				}
 
 	 			if (!this._paymentMethod) {
-	 				errors.push('Выберите способ оплаты');
+					errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
 	 			}
 
 	 			this._events.emit(AppEvent.FORM_ERRORS, { errors });

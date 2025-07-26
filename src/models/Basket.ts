@@ -1,5 +1,5 @@
 import { Observable } from './base/Observable';
-import { IEvents } from '../components/base/events';
+import { IEvents } from '../components';
 import { IProduct, AppEvent } from '../types';
 
 export class BasketModel extends Observable {
@@ -34,13 +34,6 @@ export class BasketModel extends Observable {
 	clear(): void {
 		this._items.clear();
 		this._notifyBasketUpdate();
-	}
-
-	/**
-	 * Возвращает товары в корзине
-	 */
-	getItems(): Map<string, IProduct> {
-		return new Map(this._items);
 	}
 
 	/**

@@ -1,6 +1,6 @@
 import { IEvents } from './base/events';
 import { AppEvent, IProduct } from '../types';
-import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 import { AbstractProductView } from './base/AbstractProductView';
 
 export class ProductPreview extends AbstractProductView {
@@ -17,7 +17,7 @@ export class ProductPreview extends AbstractProductView {
 		this._addButton = this._element.querySelector(`.${CLASS_NAMES.CARD_BUTTON}`) as HTMLButtonElement;
 
 		if (!this._addButton) {
-			throw new Error('Кнопка добавления в корзину не найдена');
+			throw new Error(ERROR_MESSAGES.ADD_TO_BASKET_BUTTON_NOT_FOUND);
 		}
 
 		this.renderProductInfo();

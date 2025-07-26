@@ -1,7 +1,7 @@
 import { TemplateComponent } from './TemplateComponent';
 import { IEvents } from './events';
 import { IProduct, IProductCard, ProductCategory } from '../../types';
-import { CLASS_NAMES } from '../../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES } from '../../utils/constants';
 
 /**
  * Абстрактный базовый класс для всех компонентов отображения товара
@@ -25,7 +25,7 @@ export abstract class AbstractProductView extends TemplateComponent implements I
 	get product(): IProduct {
 		const product = this._getProduct(this._productId);
 		if (!product) {
-			throw new Error(`Product with id ${this._productId} not found`);
+			throw new Error(ERROR_MESSAGES.PRODUCT_NOT_FOUND.replace(':product', this._productId));
 		}
 		return product;
 	}

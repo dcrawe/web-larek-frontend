@@ -1,7 +1,7 @@
 import { IEvents } from './base/events';
 import { Component } from './base/Component';
 import { IModal, IModalOpenEvent } from '../types';
-import { MODAL_IDS, CLASS_NAMES } from '../utils/constants';
+import { MODAL_IDS, CLASS_NAMES, ERROR_MESSAGES } from '../utils/constants';
 import { AppEvent } from '../types';
 
 export class Modal extends Component implements IModal {
@@ -14,27 +14,23 @@ export class Modal extends Component implements IModal {
   constructor(private readonly _events: IEvents, modalId: string = MODAL_IDS.MODAL_CONTAINER) {
     super();
 
-    // Находим модальное окно в DOM
     const modal = document.getElementById(modalId);
     if (!modal) {
-      throw new Error(`Модальное окно с id ${modalId} не найдено`);
+			throw new Error(ERROR_MESSAGES.MODAL_NOT_FOUND.replace(':modal', modalId));
     }
     this._element = modal as HTMLElement;
     this.container = document.body;
 
-    // Находим контейнер для контента
     this._contentContainer = this._element.querySelector(`.${CLASS_NAMES.MODAL_CONTENT}`);
     if (!this._contentContainer) {
-      throw new Error(`Контейнер для контента не найден в модальном окне`);
+			throw new Error(ERROR_MESSAGES.MODAL_CONTENT_CONTAINER_NOT_FOUND);
     }
 
-    // Находим кнопку закрытия
     this._closeButton = this._element.querySelector(`.${CLASS_NAMES.MODAL_CLOSE}`);
     if (!this._closeButton) {
-      throw new Error(`Кнопка закрытия не найдена в модальном окне`);
+			throw new Error(ERROR_MESSAGES.MODAL_CLOSE_BUTTON_NOT_FOUND);
     }
 
-    // Инициализация обработчиков событий
     this._initEventListeners();
   }
 

@@ -1,7 +1,7 @@
 import { Component } from './base/Component';
 import { IEvents } from './base/events';
 import { AppEvent } from '../types';
-import { CLASS_NAMES } from '../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES } from '../utils/constants';
 
 /**
  * Компонент для отображения количества товаров в корзине
@@ -12,10 +12,9 @@ export class BasketCounter extends Component {
   constructor(private readonly _events: IEvents) {
     super();
 
-    // Находим элемент счетчика в DOM
     this._counter = document.querySelector(`.${CLASS_NAMES.HEADER_BASKET_COUNTER}`);
     if (!this._counter) {
-      throw new Error('Элемент счетчика корзины не найден');
+      throw new Error(ERROR_MESSAGES.BASKET_COUNTER_NOT_FOUND);
     }
 
     this._element = this._counter;

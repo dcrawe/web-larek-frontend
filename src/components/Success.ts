@@ -1,7 +1,7 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
 import { AppEvent } from '../types';
-import { CLASS_NAMES, TEMPLATE_IDS } from '../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 
 export class Success extends TemplateComponent {
 	private readonly _title: HTMLElement;
@@ -17,7 +17,7 @@ export class Success extends TemplateComponent {
 		this._button = this._element.querySelector(`.${CLASS_NAMES.ORDER_SUCCESS_CLOSE}`) as HTMLButtonElement;
 
 		if (!this._title || !this._description || !this._button) {
-			throw new Error('Не удалось найти обязательные элементы компонента Success');
+			throw new Error(ERROR_MESSAGES.SUCCESS_COMPONENT_ELEMENTS_NOT_FOUND);
 		}
 
 		this._initEventListeners();

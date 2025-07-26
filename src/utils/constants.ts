@@ -128,7 +128,20 @@ export const ERROR_MESSAGES = {
 	ADDRESS_INPUT_NOT_FOUND: 'Поле ввода адреса не найдено',
 	PAYMENT_BUTTONS_NOT_FOUND: 'Кнопки выбора способа оплаты не найдены',
 	FORM_ERRORS_ELEMENT_NOT_FOUND: 'Элемент для отображения ошибок не найден',
+	PRODUCT_NOT_FOUND: 'Продукт с id :product не найден',
+	TEMPLATE_NOT_FOUND: 'Шаблон с id :template не найден',
+	TEMPLATE_EMPTY: 'Шаблон с id :template не содержит элементов',
+	CONTAINER_NOT_FOUND: 'Контейнер с селектором :selector не найден',
+	BASKET_CONTAINER_NOT_FOUND: 'Не удалось найти обязательные элементы корзины',
+	BASKET_COUNTER_NOT_FOUND: 'Элемент счетчика корзины не найден',
+	CONTAINER_WITH_SELECTOR_NOT_FOUND: 'Контейнер с селектором :container не найден',
+	MODAL_NOT_FOUND: 'Модальное окно с id :modal не найдено',
+	MODAL_CONTENT_CONTAINER_NOT_FOUND: 'Контейнер для контента не найден в модальном окне',
+	MODAL_CLOSE_BUTTON_NOT_FOUND: 'Кнопка закрытия не найдена в модальном окне',
+	ADD_TO_BASKET_BUTTON_NOT_FOUND: 'Кнопка добавления в корзину не найдена',
+	SUCCESS_COMPONENT_ELEMENTS_NOT_FOUND: 'Не удалось найти обязательные элементы компонента Success',
 
+	// Сформулируй ключи для выделенных строк
 	// Ошибки валидации
 	ADDRESS_REQUIRED: 'Необходимо указать адрес',
 	EMAIL_REQUIRED: 'Необходимо указать email',

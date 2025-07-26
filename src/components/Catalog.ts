@@ -2,7 +2,7 @@ import { Component } from './base/Component';
 import { IEvents } from './base/events';
 import { ICatalog, IProduct } from '../types';
 import { ProductCard } from './ProductCard';
-import { CLASS_NAMES } from '../utils/constants';
+import { CLASS_NAMES, ERROR_MESSAGES } from '../utils/constants';
 
 export class Catalog extends Component implements ICatalog {
 	readonly template: HTMLTemplateElement = null;
@@ -20,7 +20,7 @@ export class Catalog extends Component implements ICatalog {
 		const gallery = document.querySelector(containerSelector);
 
 		if (!gallery) {
-			throw new Error(`Контейнер с селектором ${containerSelector} не найден`);
+			throw new Error(ERROR_MESSAGES.CONTAINER_WITH_SELECTOR_NOT_FOUND.replace(':container', containerSelector));
 		}
 
 		this._element = gallery as HTMLElement;
