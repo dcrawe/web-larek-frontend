@@ -1,4 +1,4 @@
-import { EventEmitter, BasketCounter } from '../components';
+import { EventEmitter, BasketCounter, ProductCard } from '../components';
 import { ApiService } from '../services/ApiService';
 import { BasketModel, ProductModel, OrderModel } from '../models';
 import { AppEvent, IPresenter, IView, IOrderDTO, IProduct, IProductDTO } from '../types';
@@ -38,11 +38,20 @@ export class AppPresenter implements IPresenter {
 		this._orderModel = new OrderModel(this._eventEmitter);
 		this._basketCounter = new BasketCounter(this._eventEmitter);
 
+		// Создание фабрики для карточек товаров
+		const cardFactory = (productId: string) => 
+			new ProductCard(
+				productId,
+				this._eventEmitter,
+				(id: string) => this._productModel.getProduct(id)
+			);
+
 		// Инициализация компонентов представления
 		this._modal = new Modal(this._eventEmitter);
 		this._catalog = new Catalog(
 			this._eventEmitter,
 			(id: string) => this._productModel.getProduct(id),
+			cardFactory,
 			`.${CLASS_NAMES.GALLERY}`
 		);
 		this._basket = new Basket(this._eventEmitter);
@@ -122,6 +131,16 @@ export class AppPresenter implements IPresenter {
 	 * Инициализирует обработчики событий
 	 */
 	private _initEventListeners(): void {
+		// Обработчик события загрузки товаров из модели
+		this._eventEmitter.on<{ products: IProduct[] }>(AppEvent.PRODUCTS_LOADED, (data) => {
+			this._catalog.createCardsFromProducts(data.products);
+		});
+
+		// Обработчик обновления карточки каталога при изменении корзины
+		this._eventEmitter.on(AppEvent.BASKET_UPDATE, () => {
+			this._catalog.updateCards();
+		});
+
 		// Обработчик выбора товара
 		this._eventEmitter.on<{ productId: string }>(AppEvent.PRODUCT_SELECT, (data) => {
 			const preview = new ProductPreview(

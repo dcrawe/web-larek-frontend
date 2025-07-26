@@ -80,7 +80,6 @@ export abstract class AbstractProductView extends TemplateComponent implements I
 	 * Устанавливает класс категории для элемента
 	 */
 	protected setCategoryClass(element: Element, category: ProductCategory): void {
-		// Удаляем все классы категорий
 		element.classList.remove(
 			CLASS_NAMES.CARD_CATEGORY_SOFT,
 			CLASS_NAMES.CARD_CATEGORY_HARD,

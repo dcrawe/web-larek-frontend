@@ -33,6 +33,8 @@ export interface ICatalog extends ITemplateComponent {
 	setCards(cards: ProductCard[]): void;
 	removeCard(card: ProductCard): void;
 	clear(): void;
+	createCardsFromProducts(products: IProduct[]): void;
+	updateCards(): void;
 }
 
 // Интерфейс для формы заказа

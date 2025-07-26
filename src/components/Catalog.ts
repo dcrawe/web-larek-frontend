@@ -1,6 +1,6 @@
 import { Component } from './base/Component';
 import { IEvents } from './base/events';
-import { ICatalog, AppEvent, IProduct } from '../types';
+import { ICatalog, IProduct } from '../types';
 import { ProductCard } from './ProductCard';
 import { CLASS_NAMES } from '../utils/constants';
 
@@ -12,6 +12,7 @@ export class Catalog extends Component implements ICatalog {
 	constructor(
 		private readonly _events: IEvents,
 		private readonly _getProduct: (id: string) => IProduct | null,
+		private readonly _cardFactory: (productId: string) => ProductCard,
 		containerSelector: string = `.${CLASS_NAMES.GALLERY}`
 	) {
 		super();
@@ -24,8 +25,6 @@ export class Catalog extends Component implements ICatalog {
 
 		this._element = gallery as HTMLElement;
 		this.container = document.body;
-
-		this._initEventListeners();
 	}
 
 	/**
@@ -47,14 +46,21 @@ export class Catalog extends Component implements ICatalog {
 	}
 
 	/**
-	 * Создает карточки из продуктов
+	 * Создает карточки из продуктов используя фабрику
 	 */
-	private _createCards(products: IProduct[]): void {
+	createCardsFromProducts(products: IProduct[]): void {
 		const cards = products.map(product =>
-			new ProductCard(product.id, this._events, this._getProduct)
+			this._cardFactory(product.id)
 		);
 
 		this.setCards(cards);
+	}
+
+	/**
+	 * Обновляет отображение карточек без пересоздания
+	 */
+	updateCards(): void {
+		this.cards.forEach(card => card.update());
 	}
 
 	/**
@@ -76,15 +82,5 @@ export class Catalog extends Component implements ICatalog {
 	clear(): void {
 		this._element.innerHTML = '';
 		this.cards.length = 0;
-	}
-
-	/**
-	 * Инициализирует обработчики событий
-	 */
-	private _initEventListeners(): void {
-		// Обработчик события загрузки товаров из модели
-		this._events.on<{ products: IProduct[] }>(AppEvent.PRODUCTS_LOADED, (data) => {
-			this._createCards(data.products);
-		});
 	}
 }
