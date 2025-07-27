@@ -1,6 +1,6 @@
 import { IEvents } from '../components';
 import { IProduct, PaymentMethod } from './models';
-import { ProductCard } from '../components/ProductCard';
+import { ProductCard } from '../components';
 
 // Базовый интерфейс для всех компонентов
 export interface IComponent {
@@ -55,11 +55,6 @@ export interface IContactsForm extends ITemplateComponent {
 	setPhone(phone: string): void;
 }
 
-// Интерфейс для уведомлений
-export interface INotification extends ITemplateComponent {
-	show(message: string): void;
-	hide(): void;
-}
 
 // Интерфейс для представления
 export interface IView {

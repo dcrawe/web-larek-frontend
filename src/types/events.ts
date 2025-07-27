@@ -29,6 +29,7 @@ export const enum AppEvent {
 	ORDER_CONFIRM = 'order:confirm',
 	ORDER_SUBMIT = 'order:submit',
 	ORDER_SUCCESS = 'order:success',
+	ORDER_CLEAR = 'order:clear',
 
 	// События модальных окон
 	MODAL_OPEN = 'modal:open',
@@ -41,7 +42,6 @@ export const enum AppEvent {
 	ORDER_FORM_ERRORS = 'order:form:errors',
 	CONTACTS_FORM_VALID = 'contacts:form:valid',
 	CONTACTS_FORM_ERRORS = 'contacts:form:errors',
-	ORDER_CLEAR = 'order:clear',
 }
 
 // Интерфейсы для событий
