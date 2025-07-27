@@ -26,8 +26,10 @@ export const enum AppEvent {
 	ORDER_PAYMENT_SELECT = 'order:payment:select',
 	ORDER_ADDRESS_SET = 'order:address:set',
 	ORDER_CONTACTS_SET = 'order:contacts:set',
+	ORDER_CONFIRM = 'order:confirm',
 	ORDER_SUBMIT = 'order:submit',
 	ORDER_SUCCESS = 'order:success',
+	ORDER_CLEAR = 'order:clear',
 
 	// События модальных окон
 	MODAL_OPEN = 'modal:open',
@@ -36,6 +38,10 @@ export const enum AppEvent {
 	// События формы
 	FORM_ERRORS = 'form:errors',
 	FORM_VALID = 'form:valid',
+	ORDER_FORM_VALID = 'order:form:valid',
+	ORDER_FORM_ERRORS = 'order:form:errors',
+	CONTACTS_FORM_VALID = 'contacts:form:valid',
+	CONTACTS_FORM_ERRORS = 'contacts:form:errors',
 }
 
 // Интерфейсы для событий
@@ -56,11 +62,11 @@ export interface ICardRemoveEvent {
 }
 
 export interface IProductSelectEvent {
-	product: IProduct;
+	productId: string;
 }
 
 export interface IBasketAddEvent {
-	product: IProduct;
+	productId: string;
 }
 
 export interface IBasketRemoveEvent {
@@ -68,7 +74,13 @@ export interface IBasketRemoveEvent {
 }
 
 export interface IBasketUpdateEvent {
-	items: IProduct[];
+	renderedItems: HTMLElement[];
+	total: number;
+	count: number;
+}
+
+export interface IOrderUpdateEvent {
+	items: string[];
 	total: number;
 }
 
@@ -102,6 +114,25 @@ export interface IFormErrorsEvent {
 	errors: string[];
 }
 
+export interface IOrderFormValidEvent {
+	isValid: boolean;
+}
+
+export interface IOrderFormErrorsEvent {
+	errors: string[];
+}
+
+export interface IContactsFormValidEvent {
+	isValid: boolean;
+}
+
+export interface IContactsFormErrorsEvent {
+	errors: string[];
+}
+
+// Тип для событий без данных
+export type EmptyEvent = Record<string, never>;
+
 export interface IEventPayloadMap {
 	[AppEvent.PRODUCTS_LOADED]: IProductsLoadedEvent;
 	[AppEvent.CARDS_LOADED]: ICardsLoadedEvent;
@@ -112,16 +143,23 @@ export interface IEventPayloadMap {
 	[AppEvent.BASKET_ADD]: IBasketAddEvent;
 	[AppEvent.BASKET_REMOVE]: IBasketRemoveEvent;
 	[AppEvent.BASKET_UPDATE]: IBasketUpdateEvent;
-	[AppEvent.BASKET_CLEAR]: Record<string, never>;
-	[AppEvent.BASKET_OPEN]: Record<string, never>;
-	[AppEvent.ORDER_OPEN]: Record<string, never>;
+	[AppEvent.BASKET_CLEAR]: EmptyEvent;
+	[AppEvent.BASKET_OPEN]: EmptyEvent;
+	[AppEvent.ORDER_OPEN]: EmptyEvent;
+	[AppEvent.ORDER_UPDATE]: IOrderUpdateEvent;
 	[AppEvent.ORDER_PAYMENT_SELECT]: IOrderPaymentSelectEvent;
 	[AppEvent.ORDER_ADDRESS_SET]: IOrderAddressSetEvent;
 	[AppEvent.ORDER_CONTACTS_SET]: IOrderContactsSetEvent;
+	[AppEvent.ORDER_CONFIRM]: EmptyEvent;
 	[AppEvent.ORDER_SUBMIT]: IOrderSubmitEvent;
 	[AppEvent.ORDER_SUCCESS]: IOrderSuccessEvent;
+	[AppEvent.ORDER_CLEAR]: EmptyEvent;
 	[AppEvent.MODAL_OPEN]: IModalOpenEvent;
-	[AppEvent.MODAL_CLOSE]: Record<string, never>;
+	[AppEvent.MODAL_CLOSE]: EmptyEvent;
 	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
-	[AppEvent.FORM_VALID]: Record<string, never>;
+	[AppEvent.FORM_VALID]: EmptyEvent;
+	[AppEvent.ORDER_FORM_VALID]: IOrderFormValidEvent;
+	[AppEvent.ORDER_FORM_ERRORS]: IOrderFormErrorsEvent;
+	[AppEvent.CONTACTS_FORM_VALID]: IContactsFormValidEvent;
+	[AppEvent.CONTACTS_FORM_ERRORS]: IContactsFormErrorsEvent;
 }

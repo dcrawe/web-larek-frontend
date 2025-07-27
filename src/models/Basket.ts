@@ -1,6 +1,10 @@
 import { Observable } from './base/Observable';
-import { IEvents } from '../components/base/events';
-import { IProduct, AppEvent } from '../types';
+import { IEvents } from '../components';
+import { BasketItem } from '../components/BasketItem';
+import {
+	IProduct,
+	AppEvent,
+} from '../types';
 
 export class BasketModel extends Observable {
 	private _items: Map<string, IProduct> = new Map();
@@ -37,13 +41,6 @@ export class BasketModel extends Observable {
 	}
 
 	/**
-	 * Возвращает товары в корзине
-	 */
-	getItems(): Map<string, IProduct> {
-		return new Map(this._items);
-	}
-
-	/**
 	 * Возвращает массив товаров в корзине
 	 */
 	getItemsArray(): IProduct[] {
@@ -61,7 +58,10 @@ export class BasketModel extends Observable {
 	 * Вычисляет общую стоимость товаров в корзине
 	 */
 	getTotalPrice(): number {
-		return Array.from(this._items.values()).reduce((total, item) => total + item.price, 0);
+		return Array.from(this._items.values()).reduce(
+			(total, item) => total + item.price,
+			0
+		);
 	}
 
 	/**
@@ -86,17 +86,23 @@ export class BasketModel extends Observable {
 		const total = this.getTotalPrice();
 		const count = this.getItemCount();
 
+		// Создаем элементы корзины через BasketItem
+		const renderedItems = items.map((item, index) => {
+			const basketItem = new BasketItem(this._events, item, index);
+			return basketItem.render();
+		});
+
 		// Уведомляем компонент корзины
-		this._notifyChange(AppEvent.BASKET_UPDATE, {
-			items,
+		this._notifyChange<AppEvent.BASKET_UPDATE>(AppEvent.BASKET_UPDATE, {
+			renderedItems,
 			total,
-			count
+			count,
 		});
 
 		// Уведомляем модель заказа
-		this._notifyChange(AppEvent.ORDER_UPDATE, {
+		this._notifyChange<AppEvent.ORDER_UPDATE>(AppEvent.ORDER_UPDATE, {
 			items: this.getItemIds(),
-			total
+			total,
 		});
 	}
 }

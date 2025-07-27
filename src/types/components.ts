@@ -1,6 +1,6 @@
 import { IEvents } from '../components';
 import { IProduct, PaymentMethod } from './models';
-import { ProductCard } from '../components/ProductCard';
+import { ProductCard } from '../components';
 
 // Базовый интерфейс для всех компонентов
 export interface IComponent {
@@ -23,21 +23,14 @@ export interface IModal extends ITemplateComponent {
 // Интерфейс для карточки товара
 export interface IProductCard extends ITemplateComponent {
 	readonly product: IProduct;
+	update(): void;
 }
 
-// Интерфейс для каталога товаров
+// Интерфейс для каталога товаров - только отображение
 export interface ICatalog extends ITemplateComponent {
-	readonly cards: ProductCard[];
-	addCard(card: ProductCard): void;
-	setCards(cards: ProductCard[]): void;
-	removeCard(card: ProductCard): void;
+	renderProducts(products: IProduct[]): void;
+	updateView(): void;
 	clear(): void;
-}
-
-// Интерфейс для корзины
-export interface IBasket extends ITemplateComponent {
-	readonly items: Map<string, IProduct>;
-	readonly total: number;
 }
 
 // Интерфейс для формы заказа
@@ -58,11 +51,6 @@ export interface IContactsForm extends ITemplateComponent {
 	setPhone(phone: string): void;
 }
 
-// Интерфейс для уведомлений
-export interface INotification extends ITemplateComponent {
-	show(message: string): void;
-	hide(): void;
-}
 
 // Интерфейс для представления
 export interface IView {

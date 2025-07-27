@@ -51,8 +51,3 @@ export interface IOrderResponseDTO {
 	id: string;
 	total: number;
 }
-
-// Модель для ошибки от API
-export interface IErrorResponseDTO {
-	error: string;
-}
