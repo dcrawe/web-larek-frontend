@@ -122,24 +122,34 @@ export class AppPresenter implements IPresenter {
 	 * Создает объект заказа для отправки на сервер
 	 */
 	private _createOrderDTO(): IOrderDTO | null {
-		// Проверяем, что модель заказа валидна
 		if (!this._orderModel.isValid()) {
 			return null;
 		}
 
-		// Проверяем, что в корзине есть товары
 		if (this._basketModel.getItemCount() === 0) {
 			return null;
 		}
 
-		// Собираем данные из разных моделей
+		const basketItems = this._basketModel.getItemsArray();
+		const validItems = basketItems.filter(item => {
+			const product = this._productModel.getProduct(item.id);
+			return product && product.price !== null && product.price !== undefined && product.price > 0;
+		});
+
+		if (validItems.length === 0) {
+			console.warn('В корзине нет товаров с указанными ценами');
+			return null;
+		}
+
+		const totalPrice = validItems.reduce((total, item) => total + item.price, 0);
+
 		return {
 			address: this._orderModel.getAddress(),
 			email: this._orderModel.getEmail(),
 			phone: this._orderModel.getPhone(),
 			payment: this._orderModel.getPaymentMethod()!,
-			items: this._basketModel.getItemIds(),
-			total: this._basketModel.getTotalPrice()
+			items: validItems.map(item => item.id),
+			total: totalPrice
 		};
 	}
 
