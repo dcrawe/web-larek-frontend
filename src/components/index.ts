@@ -4,6 +4,7 @@ export * from './ProductPreview';
 export * from './Catalog';
 export * from './Basket';
 export * from './BasketCounter';
+export * from './BasketItem';
 export * from './OrderForm';
 export * from './ContactsForm';
 export * from './Success';

@@ -74,7 +74,7 @@ export interface IBasketRemoveEvent {
 }
 
 export interface IBasketUpdateEvent {
-	items: IProduct[];
+	renderedItems: HTMLElement[];
 	total: number;
 	count: number;
 }

@@ -1,5 +1,6 @@
 import { Observable } from './base/Observable';
 import { IEvents } from '../components';
+import { BasketItem } from '../components/BasketItem';
 import {
 	IProduct,
 	AppEvent,
@@ -85,9 +86,15 @@ export class BasketModel extends Observable {
 		const total = this.getTotalPrice();
 		const count = this.getItemCount();
 
+		// Создаем элементы корзины через BasketItem
+		const renderedItems = items.map((item, index) => {
+			const basketItem = new BasketItem(this._events, item, index);
+			return basketItem.render();
+		});
+
 		// Уведомляем компонент корзины
 		this._notifyChange<AppEvent.BASKET_UPDATE>(AppEvent.BASKET_UPDATE, {
-			items,
+			renderedItems,
 			total,
 			count,
 		});

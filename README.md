@@ -108,7 +108,7 @@ API → ProductModel/CatalogModel → PRODUCTS_LOADED → Catalog → ProductCar
 ProductCard → PRODUCT_SELECT → ProductPreview → BASKET_ADD → BasketModel
 
 Корзина:
-BasketModel → BASKET_UPDATE → Basket/BasketCounter → ORDER_OPEN → OrderForm
+BasketModel → создает BasketItem → BASKET_UPDATE → Basket/BasketCounter → ORDER_OPEN → OrderForm
 
 Оформление заказа:
 OrderForm → ORDER_SUBMIT → ContactsForm → ORDER_CONFIRM → API → Success
@@ -122,8 +122,8 @@ OrderForm → ORDER_SUBMIT → ContactsForm → ORDER_CONFIRM → API → Succes
 4. Пользователь нажимает "В корзину" 
 5. `ProductPreview` → отправляет `BASKET_ADD`
 6. `AppPresenter` → добавляет товар в `BasketModel`
-7. `BasketModel` → отправляет `BASKET_UPDATE`
-8. `Basket` и `BasketCounter` обновляют отображение
+7. `BasketModel` → создает элементы `BasketItem` и отправляет `BASKET_UPDATE`
+8. `Basket` отображает готовые элементы и `BasketCounter` обновляет счетчик
 
 #### Оформление заказа:
 1. Пользователь открывает корзину и нажимает "Оформить"
@@ -163,6 +163,13 @@ const count = basketModel.getItemCount();
 
 // Очистка корзины
 basketModel.clear();
+
+// В обработчике события BASKET_UPDATE теперь приходят готовые HTML элементы
+events.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, (data) => {
+  // Использование готовых HTML элементов
+  basketContainer.innerHTML = '';
+  data.renderedItems.forEach(item => basketContainer.appendChild(item));
+});
 ```
 #### Работа с событиями
 ```typescript
@@ -421,7 +428,7 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 
 ---
 #### Basket
-**Назначение**: Компонент корзины покупок. Отображает список добавленных товаров, общую стоимость и кнопку оформления заказа.
+**Назначение**: Компонент корзины покупок. Отображает список добавленных товаров, общую стоимость и кнопку оформления заказа. Отвечает только за отображение списка, а не за рендер отдельных товаров.
 
 **Свойства**:
 - `_list: HTMLElement` - Контейнер списка товаров
@@ -434,8 +441,26 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 
 **Методы**:
 - `render(): HTMLElement` - Возвращает DOM-элемент корзины
-- `_updateDisplay(items: IProduct[], total: number, count: number): void` - Обновляет отображение корзины
+- `_updateDisplay(items: HTMLElement[], total: number): void` - Обновляет отображение корзины, принимая готовые HTML элементы
 - `_initEventListeners(): void` - Инициализирует обработчики событий
+
+---
+#### BasketItem
+**Назначение**: Компонент элемента корзины. Отвечает за рендеринг отдельного товара в корзине.
+
+**Свойства**:
+- `_product: IProduct` - Товар для отображения
+- `_index: number` - Индекс товара в списке
+
+**Конструктор**:
+- `constructor(events: IEvents, product: IProduct, index: number)` - Создает элемент корзины
+  - `events: IEvents` - Брокер событий для взаимодействия
+  - `product: IProduct` - Товар для отображения
+  - `index: number` - Индекс товара в списке
+
+**Методы**:
+- `_render(): void` - Создает DOM элемент товара в корзине
+- `render(): HTMLElement` - Возвращает готовый DOM-элемент
 
 ---
 #### BasketCounter
@@ -545,7 +570,7 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 - `_notifyChange<T>(eventName: T, data?: IEventPayloadMap[T]): void` - Уведомляет подписчиков об изменениях
 
 ### BasketModel
-**Назначение**: Модель корзины покупок. Управляет состоянием корзины, добавлением и удалением товаров, расчетом общей стоимости.
+**Назначение**: Модель корзины покупок. Управляет состоянием корзины, добавлением и удалением товаров, расчетом общей стоимости. Отвечает за создание готовых HTML элементов товаров.
 
 **Свойства**:
 - `_items: Map<string, IProduct>` - Товары в корзине
@@ -563,7 +588,7 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 - `getItemCount(): number` - Возвращает количество товаров
 - `getTotalPrice(): number` - Возвращает общую стоимость
 - `clear(): void` - Очищает корзину
-- `_notifyBasketUpdate(): void` - Уведомляет об изменениях в корзине
+- `_notifyBasketUpdate(): void` - Создает готовые HTML элементы товаров и уведомляет об изменениях в корзине
 
 ### ProductModel
 **Назначение**: Модель товаров. Управляет коллекцией товаров, предоставляет методы для поиска и фильтрации товаров.
@@ -931,9 +956,9 @@ interface IBasketRemoveEvent {
 #### IBasketUpdateEvent
 ```typescript
 interface IBasketUpdateEvent {
-  items: IProduct[];        // Товары в корзине
-  total: number;            // Общая стоимость
-  count: number;            // Количество товаров
+  renderedItems: HTMLElement[]; // Готовые HTML элементы товаров в корзине
+  total: number;               // Общая стоимость
+  count: number;               // Количество товаров
 }
 ```
 #### IOrderUpdateEvent
