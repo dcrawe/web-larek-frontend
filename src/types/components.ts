@@ -26,15 +26,11 @@ export interface IProductCard extends ITemplateComponent {
 	update(): void;
 }
 
-// Интерфейс для каталога товаров
+// Интерфейс для каталога товаров - только отображение
 export interface ICatalog extends ITemplateComponent {
-	readonly cards: ProductCard[];
-	addCard(card: ProductCard): void;
-	setCards(cards: ProductCard[]): void;
-	removeCard(card: ProductCard): void;
+	renderProducts(products: IProduct[]): void;
+	updateView(): void;
 	clear(): void;
-	createCardsFromProducts(products: IProduct[]): void;
-	updateCards(): void;
 }
 
 // Интерфейс для формы заказа

@@ -89,11 +89,12 @@ API_ORIGIN=https://larek-api.nomoreparties.co
 1. **AppPresenter** - центральный координатор, управляет всем взаимодействием между моделями и представлениями через EventEmitter
 2. **Модели** уведомляют о изменениях через события:
    - `ProductModel` → `PRODUCTS_LOADED` при загрузке товаров
+   - `CatalogModel` → `PRODUCTS_LOADED` при изменении каталога
    - `BasketModel` → `BASKET_UPDATE` при изменении корзины
    - `OrderModel` → `ORDER_UPDATE` при изменении заказа
 
 3. **Представления** реагируют на события и отправляют пользовательские действия:
-   - `Catalog` отображает товары и отправляет `PRODUCT_SELECT`
+   - `Catalog` отображает товары из модели каталога
    - `ProductPreview` отправляет `BASKET_ADD` при добавлении товара
    - `Basket` отправляет `BASKET_REMOVE` и `ORDER_OPEN`
    - `OrderForm`/`ContactsForm` отправляют данные заказа
@@ -101,7 +102,7 @@ API_ORIGIN=https://larek-api.nomoreparties.co
 ### Поток данных
 ```
 Инициализация:
-API → ProductModel → PRODUCTS_LOADED → Catalog → ProductCard
+API → ProductModel/CatalogModel → PRODUCTS_LOADED → Catalog → ProductCard
 
 Выбор товара:
 ProductCard → PRODUCT_SELECT → ProductPreview → BASKET_ADD → BasketModel
@@ -208,19 +209,21 @@ events.emit<EmptyEvent>(AppEvent.MODAL_CLOSE, {});
 ```
 #### Работа с каталогом
 ```typescript
+// Создание модели каталога
+const catalogModel = new CatalogModel(events);
+
 // Создание каталога с фабрикой карточек
 const catalog = new Catalog(
-events,
-(id: string) => productModel.getProduct(id),
-(productId: string) => new ProductCard(productId, events, getProduct),
-'.gallery'
+  events,
+  (productId: string) => new ProductCard(productId, events, getProduct),
+  '.gallery'
 );
 
-// Создание карточек из товаров
-catalog.createCardsFromProducts(products);
+// Отображение продуктов в каталоге
+catalog.renderProducts(catalogModel.products);
 
 // Обновление существующих карточек
-catalog.updateCards();
+catalog.updateView();
 ```
 ## Обработка ошибок
 
@@ -354,26 +357,23 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 
 ---
 #### Catalog
-**Назначение**: Компонент для отображения каталога товаров. Управляет коллекцией карточек товаров и их отображением в галерее.
+**Назначение**: Компонент для отображения каталога товаров. Отображает продукты из модели каталога.
 
 **Свойства**:
-- `cards: ProductCard[]` - Массив карточек товаров
+- `_cards: ProductCard[]` - Внутренний массив карточек товаров
 - `container: HTMLElement` - Контейнер для размещения каталога
 - `template: HTMLTemplateElement` - Шаблон каталога (null для данного компонента)
+- `events: IEvents` - Брокер событий
 
 **Конструктор**:
-- `constructor(events: IEvents, getProduct: (id: string) => IProduct | null, cardFactory: (productId: string) => ProductCard, containerSelector: string)` - Создает каталог товаров
+- `constructor(events: IEvents, cardFactory: (productId: string) => ProductCard, containerSelector: string)` - Создает каталог товаров
   - `events: IEvents` - Брокер событий
-  - `getProduct: (id: string) => IProduct | null` - Функция получения товара
   - `cardFactory: (productId: string) => ProductCard` - Фабрика создания карточек
   - `containerSelector: string` - Селектор контейнера галереи (по умолчанию `.gallery`)
 
 **Методы**:
-- `addCard(card: ProductCard): void` - Добавляет карточку в каталог
-- `setCards(cards: ProductCard[]): void` - Устанавливает набор карточек
-- `createCardsFromProducts(products: IProduct[]): void` - Создает карточки из массива товаров
-- `updateCards(): void` - Обновляет отображение всех карточек
-- `removeCard(card: ProductCard): void` - Удаляет карточку из каталога
+- `renderProducts(products: IProduct[]): void` - Отображает список продуктов в каталоге
+- `updateView(): void` - Обновляет отображение всех карточек без их пересоздания
 - `clear(): void` - Очищает каталог
 
 ---
@@ -581,6 +581,24 @@ async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
 - `getProducts(): IProduct[]` - Возвращает все товары
 - `addProduct(product: IProduct): void` - Добавляет товар в коллекцию
 
+### CatalogModel
+**Назначение**: Модель каталога товаров. Управляет отображаемыми товарами и предоставляет методы для работы с каталогом.
+
+**Свойства**:
+- `_products: IProduct[]` - Список товаров в каталоге
+
+**Конструктор**:
+- `constructor(events: IEvents)` - Создает модель каталога
+  - `events: IEvents` - Брокер событий для уведомления об изменениях в каталоге
+
+**Методы**:
+- `products: IProduct[]` - Геттер для получения списка товаров
+- `setProducts(products: IProduct[]): void` - Устанавливает список товаров
+- `addProduct(product: IProduct): void` - Добавляет товар в каталог
+- `removeProduct(productId: string): void` - Удаляет товар из каталога
+- `clear(): void` - Очищает каталог
+- `getProductById(id: string): IProduct | null` - Получает товар по ID
+
 ### OrderModel
 **Назначение**: Модель заказа. Управляет данными заказа: адрес, контакты, способ оплаты. Выполняет валидацию данных.
 
@@ -725,6 +743,17 @@ interface IApi {
   getProducts(): Promise<IProductDTO[]>;        // Получение списка товаров с сервера
   createOrder(order: IOrderDTO): Promise<IOrderResponseDTO>; // Создание заказа на сервере
 }
+
+#### ICatalogModel
+```typescript
+interface ICatalogModel {
+  readonly products: IProduct[];                  // Список товаров в каталоге
+  setProducts(products: IProduct[]): void;        // Устанавливает список товаров
+  addProduct(product: IProduct): void;            // Добавляет товар в каталог
+  removeProduct(productId: string): void;         // Удаляет товар из каталога
+  clear(): void;                                  // Очищает каталог
+  getProductById(id: string): IProduct | null;    // Получает товар по ID
+}
 ```
 #### IProductsResponseDTO
 ```typescript
@@ -781,13 +810,9 @@ interface IProductCard extends ITemplateComponent {
 #### ICatalog
 ```typescript
 interface ICatalog extends ITemplateComponent {
-  readonly cards: ProductCard[];                    // Массив карточек
-  addCard(card: ProductCard): void;                 // Добавляет карточку
-  setCards(cards: ProductCard[]): void;             // Устанавливает карточки
-  removeCard(card: ProductCard): void;              // Удаляет карточку
+  renderProducts(products: IProduct[]): void;       // Отображает продукты в каталоге
+  updateView(): void;                              // Обновляет отображение
   clear(): void;                                    // Очищает каталог
-  createCardsFromProducts(products: IProduct[]): void; // Создает карточки из товаров
-  updateCards(): void;                              // Обновляет карточки
 }
 ```
 #### IOrderForm

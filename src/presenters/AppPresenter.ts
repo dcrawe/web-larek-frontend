@@ -21,6 +21,7 @@ import {
 import { Basket, Catalog, ContactsForm, ProductPreview, OrderForm, Modal, Success } from '../components';
 import { CLASS_NAMES } from '../utils/constants';
 import { toProductCategory } from '../utils/utils';
+import { CatalogModel } from '../models/CatalogModel';
 
 /**
  * Главный презентер приложения
@@ -32,6 +33,7 @@ export class AppPresenter implements IPresenter {
 	private readonly _productModel: ProductModel;
 	private readonly _basketModel: BasketModel;
 	private readonly _orderModel: OrderModel;
+	private readonly _catalogModel: CatalogModel;
 	private readonly _modal: Modal;
 	private readonly _catalog: Catalog;
 	private readonly _basket: Basket;
@@ -52,6 +54,7 @@ export class AppPresenter implements IPresenter {
 		this._productModel = new ProductModel(this._eventEmitter);
 		this._basketModel = new BasketModel(this._eventEmitter);
 		this._orderModel = new OrderModel(this._eventEmitter);
+		this._catalogModel = new CatalogModel(this._eventEmitter);
 		this._basketCounter = new BasketCounter(this._eventEmitter);
 
 		// Создание фабрики для карточек товаров
@@ -66,7 +69,6 @@ export class AppPresenter implements IPresenter {
 		this._modal = new Modal(this._eventEmitter);
 		this._catalog = new Catalog(
 			this._eventEmitter,
-			(id: string) => this._productModel.getProduct(id),
 			cardFactory,
 			`.${CLASS_NAMES.GALLERY}`
 		);
@@ -107,7 +109,9 @@ export class AppPresenter implements IPresenter {
 			const productsDTO = await this._api.getProducts();
 			const products = productsDTO.map(dto => this._mapProductDTOToProduct(dto));
 
+			// Устанавливаем продукты в обе модели
 			this._productModel.setProducts(products);
+			this._catalogModel.setProducts(products);
 
 			// Инициализируем кнопку корзины
 			this._basketButton.addEventListener('click', () => {
@@ -159,12 +163,12 @@ export class AppPresenter implements IPresenter {
 	private _initEventListeners(): void {
 		// Обработчик события загрузки товаров из модели
 		this._eventEmitter.on<IProductsLoadedEvent>(AppEvent.PRODUCTS_LOADED, (data) => {
-			this._catalog.createCardsFromProducts(data.products);
+			this._catalog.renderProducts(data.products);
 		});
 
 		// Обработчик обновления карточки каталога при изменении корзины
 		this._eventEmitter.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, () => {
-			this._catalog.updateCards();
+			this._catalog.updateView();
 		});
 
 		// Обработчик выбора товара

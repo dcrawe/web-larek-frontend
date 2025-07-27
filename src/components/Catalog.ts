@@ -1,17 +1,16 @@
 import { Component } from './base/Component';
 import { IEvents } from './base/events';
-import { ICatalog, IProduct } from '../types';
+import { ICatalog, IProduct, IView } from '../types';
 import { ProductCard } from './ProductCard';
 import { CLASS_NAMES, ERROR_MESSAGES } from '../utils/constants';
 
-export class Catalog extends Component implements ICatalog {
+export class Catalog extends Component implements ICatalog, IView {
 	readonly template: HTMLTemplateElement = null;
 	readonly container: HTMLElement;
-	readonly cards: ProductCard[] = [];
+	private _cards: ProductCard[] = [];
 
 	constructor(
-		private readonly _events: IEvents,
-		private readonly _getProduct: (id: string) => IProduct | null,
+		public readonly events: IEvents,
 		private readonly _cardFactory: (productId: string) => ProductCard,
 		containerSelector: string = `.${CLASS_NAMES.GALLERY}`
 	) {
@@ -28,52 +27,23 @@ export class Catalog extends Component implements ICatalog {
 	}
 
 	/**
-	 * Добавляет готовую карточку в каталог
+	 * Отображает список продуктов в каталоге
 	 */
-	addCard(card: ProductCard): void {
-		this.cards.push(card);
-		this._element.appendChild(card.render());
+	renderProducts(products: IProduct[]): void {
+		this.clear();
+
+		this._cards = products.map(product => {
+			const card = this._cardFactory(product.id);
+			this._element.appendChild(card.render());
+			return card;
+		});
 	}
 
 	/**
-	 * Устанавливает набор карточек в каталоге
+	 * Обновляет отображение без пересоздания карточек
 	 */
-	setCards(cards: ProductCard[]): void {
-		this._element.innerHTML = '';
-		this.cards.length = 0;
-
-		cards.forEach(card => this.addCard(card));
-	}
-
-	/**
-	 * Создает карточки из продуктов используя фабрику
-	 */
-	createCardsFromProducts(products: IProduct[]): void {
-		const cards = products.map(product =>
-			this._cardFactory(product.id)
-		);
-
-		this.setCards(cards);
-	}
-
-	/**
-	 * Обновляет отображение карточек без пересоздания
-	 */
-	updateCards(): void {
-		this.cards.forEach(card => card.update());
-	}
-
-	/**
-	 * Удаляет карточку из каталога
-	 */
-	removeCard(card: ProductCard): void {
-		const index = this.cards.indexOf(card);
-
-		if (index !== -1) {
-			this.cards.splice(index, 1);
-
-			card.render().remove();
-		}
+	updateView(): void {
+		this._cards.forEach(card => card.update());
 	}
 
 	/**
@@ -81,6 +51,6 @@ export class Catalog extends Component implements ICatalog {
 	 */
 	clear(): void {
 		this._element.innerHTML = '';
-		this.cards.length = 0;
+		this._cards = [];
 	}
 }
