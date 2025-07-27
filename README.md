@@ -22,6 +22,17 @@
 - src/scss/styles.scss — корневой файл стилей
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
+- src/components/base/ — папка с базовым кодом
+
+## Конфигурация
+
+Проект использует переменные окружения для настройки API:
+```
+bash
+# .env файл
+API_ORIGIN=https://larek-api.nomoreparties.co
+```
+Скопируйте `.env.example` в `.env` и настройте переменные согласно вашему окружению.
 
 ## Установка и запуск
 Для установки и запуска проекта необходимо выполнить команды
@@ -69,6 +80,197 @@
 
 ![uml.jpeg](.readme/uml.jpeg)
 
+## Взаимодействие компонентов
+
+### Схема взаимодействия
+
+Приложение построено по принципу слабой связанности компонентов через брокер событий:
+
+1. **AppPresenter** - центральный координатор, управляет всем взаимодействием между моделями и представлениями через EventEmitter
+2. **Модели** уведомляют о изменениях через события:
+   - `ProductModel` → `PRODUCTS_LOADED` при загрузке товаров
+   - `BasketModel` → `BASKET_UPDATE` при изменении корзины
+   - `OrderModel` → `ORDER_UPDATE` при изменении заказа
+
+3. **Представления** реагируют на события и отправляют пользовательские действия:
+   - `Catalog` отображает товары и отправляет `PRODUCT_SELECT`
+   - `ProductPreview` отправляет `BASKET_ADD` при добавлении товара
+   - `Basket` отправляет `BASKET_REMOVE` и `ORDER_OPEN`
+   - `OrderForm`/`ContactsForm` отправляют данные заказа
+
+### Поток данных
+```
+Инициализация:
+API → ProductModel → PRODUCTS_LOADED → Catalog → ProductCard
+
+Выбор товара:
+ProductCard → PRODUCT_SELECT → ProductPreview → BASKET_ADD → BasketModel
+
+Корзина:
+BasketModel → BASKET_UPDATE → Basket/BasketCounter → ORDER_OPEN → OrderForm
+
+Оформление заказа:
+OrderForm → ORDER_SUBMIT → ContactsForm → ORDER_CONFIRM → API → Success
+```
+### Последовательность действий (основные сценарии)
+
+#### Добавление товара в корзину:
+1. Пользователь кликает по карточке товара
+2. `ProductCard` → отправляет `PRODUCT_SELECT`
+3. `AppPresenter` → создает `ProductPreview` и открывает модальное окно
+4. Пользователь нажимает "В корзину" 
+5. `ProductPreview` → отправляет `BASKET_ADD`
+6. `AppPresenter` → добавляет товар в `BasketModel`
+7. `BasketModel` → отправляет `BASKET_UPDATE`
+8. `Basket` и `BasketCounter` обновляют отображение
+
+#### Оформление заказа:
+1. Пользователь открывает корзину и нажимает "Оформить"
+2. `Basket` → отправляет `ORDER_OPEN`
+3. `AppPresenter` → открывает `OrderForm`
+4. Пользователь заполняет данные и нажимает "Далее"
+5. `OrderForm` → отправляет `ORDER_SUBMIT`
+6. `AppPresenter` → открывает `ContactsForm`
+7. Пользователь заполняет контакты и нажимает "Оплатить"
+8. `ContactsForm` → отправляет `ORDER_CONFIRM`
+9. `AppPresenter` → создает заказ через API
+10. `ApiService` → возвращает результат
+11. `AppPresenter` → очищает корзину и заказ, показывает `Success`
+
+## Программный интерфейс компонентов
+
+### Примеры использования API
+
+#### Работа с корзиной
+```typescript
+// Создание модели корзины
+const basketModel = new BasketModel(eventEmitter);
+
+// Добавление товара
+basketModel.addItem(product);
+
+// Проверка наличия товара
+if (basketModel.hasItem(productId)) {
+// товар уже в корзине
+}
+
+// Получение общей стоимости
+const total = basketModel.getTotalPrice();
+
+// Получение количества товаров
+const count = basketModel.getItemCount();
+
+// Очистка корзины
+basketModel.clear();
+```
+#### Работа с событиями
+```typescript
+// Подписка на обновление корзины
+events.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, (data) => {
+console.log(`В корзине ${data.count} товаров на сумму ${data.total}`);
+});
+
+// Отправка события выбора товара
+events.emit<IProductSelectEvent>(AppEvent.PRODUCT_SELECT, {
+productId: 'product-123'
+});
+
+// Создание триггера события
+const basketAddTrigger = events.trigger<IBasketAddEvent>(AppEvent.BASKET_ADD);
+button.addEventListener('click', basketAddTrigger);
+```
+#### Работа с формами
+```typescript
+// Создание формы заказа
+const orderForm = new OrderForm(events, orderModel);
+
+// Установка способа оплаты
+orderForm.setPaymentMethod('online');
+
+// Установка адреса
+orderForm.setAddress('ул. Примерная, д. 1');
+
+// Проверка валидности
+if (orderModel.isValid()) {
+// форма готова к отправке
+}
+```
+#### Работа с модальными окнами
+```typescript
+// Создание модального окна
+const modal = new Modal(events);
+
+// Открытие с содержимым
+modal.open(productPreview.render());
+
+// Закрытие через событие
+events.emit<EmptyEvent>(AppEvent.MODAL_CLOSE, {});
+```
+#### Работа с каталогом
+```typescript
+// Создание каталога с фабрикой карточек
+const catalog = new Catalog(
+events,
+(id: string) => productModel.getProduct(id),
+(productId: string) => new ProductCard(productId, events, getProduct),
+'.gallery'
+);
+
+// Создание карточек из товаров
+catalog.createCardsFromProducts(products);
+
+// Обновление существующих карточек
+catalog.updateCards();
+```
+## Обработка ошибок
+
+### Стратегии обработки ошибок
+
+1. **Ошибки API**:
+- Сетевые ошибки перехватываются в `Api.handleResponse()`
+- Ошибки от сервера извлекаются из поля `error` JSON-ответа или используется `response.statusText`
+- При ошибке загрузки товаров приложение выводит сообщение в консоль
+
+2. **Ошибки инициализации компонентов**:
+- Отсутствие DOM-элементов генерирует исключения при создании компонентов
+- Отсутствие шаблонов блокирует работу `TemplateComponent`
+
+3. **Ошибки валидации форм**:
+- Клиентская валидация в `OrderModel.isValid()`
+- Блокировка кнопок отправки при невалидных данных
+- Визуальная индикация ошибок в формах
+
+### Примеры обработки
+
+```typescript
+// В базовом классе Api
+protected handleResponse(response: Response): Promise<object> {
+  if (response.ok) return response.json();
+  else return response.json()
+    .then(data => Promise.reject(data.error ?? response.statusText));
+}
+
+// В ApiService при получении товаров
+async getProducts(): Promise<IProductDTO[]> {
+  try {
+    const data = await this.get(API_URL.PRODUCTS) as IProductsResponseDTO;
+    return data.items;
+  } catch (error) {
+    console.error('Ошибка при получении списка товаров:', error);
+    throw error;
+  }
+}
+
+// В ApiService при создании заказа
+async createOrder(order: IOrderDTO): Promise<IOrderResponseDTO> {
+  try {
+    return await this.post(API_URL.ORDERS, order) as IOrderResponseDTO;
+  } catch (error) {
+    console.error('Ошибка при оформлении заказа:', error);
+    throw error;
+  }
+}
+```
 ## Описание компонентов
 
 ### Базовые компоненты
@@ -406,21 +608,35 @@
 ## Сервисы
 
 ### ApiService
-**Назначение**: Сервис для взаимодействия с API backend. Выполняет HTTP-запросы для получения товаров и создания заказов.
+**Назначение**: Сервис для взаимодействия с API сервера. Наследуется от базового класса `Api` и реализует методы для получения товаров и создания заказов.
 
 **Свойства**:
-- `_baseUrl: string` - Базовый URL API
-- `_headers: Record<string, string>` - HTTP заголовки
+- `baseUrl: string` - Базовый URL API (наследуется от Api)
+- `options: RequestInit` - Настройки запросов (наследуется от Api)
 
 **Конструктор**:
-- `constructor(baseUrl?: string, headers?: Record<string, string>)` - Создает API сервис
-  - `baseUrl?: string` - Базовый URL API (по умолчанию из переменных окружения)
-  - `headers?: Record<string, string>` - HTTP заголовки (по умолчанию Content-Type: application/json)
+- `constructor(baseUrl: string = API_URL.BASE_URL)` - Создает сервис API с базовым URL
 
 **Методы**:
 - `getProducts(): Promise<IProductDTO[]>` - Получает список товаров с сервера
-- `createOrder(order: IOrderDTO): Promise<IOrderResponseDTO>` - Создает заказ на сервере
-- `handleResponse<T>(response: Response): Promise<T>` - Обрабатывает HTTP ответ
+- `createOrder(order: IOrderDTO): Promise<IOrderResponseDTO>` - Отправляет заказ на сервер
+
+### Api
+**Назначение**: Базовый класс для работы с HTTP API. Предоставляет методы для выполнения GET и POST запросов с обработкой ошибок.
+
+**Свойства**:
+- `baseUrl: string` - Базовый URL для всех запросов
+- `options: RequestInit` - Общие настройки для всех запросов
+
+**Конструктор**:
+- `constructor(baseUrl: string, options: RequestInit = {})` - Создает экземпляр API клиента
+    - `baseUrl: string` - Базовый URL API
+    - `options: RequestInit` - Дополнительные настройки запросов
+
+**Методы**:
+- `handleResponse(response: Response): Promise<object>` - Обрабатывает ответ от сервера
+- `get(uri: string): Promise<object>` - Выполняет GET запрос
+- `post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object>` - Выполняет POST/PUT/DELETE запрос
 
 ## Презентер
 
@@ -455,61 +671,54 @@
 #### IProductBase
 ```typescript
 interface IProductBase {
-id: string;           // Уникальный идентификатор товара
-description: string;  // Описание товара
-image: string;        // URL изображения товара
-title: string;        // Название товара
-price: number;        // Цена товара
+  id: string;           // Уникальный идентификатор товара
+  description: string;  // Описание товара
+  image: string;        // URL изображения товара
+  title: string;        // Название товара
+  price: number;        // Цена товара
 }
 ```
 #### IProduct
 ```typescript
 interface IProduct extends IProductBase {
-category: ProductCategory; // Категория товара (локализованная)
+  category: ProductCategory; // Категория товара (локализованная)
 }
 ```
 #### IProductDTO
 ```typescript
 interface IProductDTO extends IProductBase {
-category: string;     // Категория товара (строка от API)
+  category: string;     // Категория товара (строка от API)
 }
 ```
 #### IContactInfo
 ```typescript
 interface IContactInfo {
-email: string;        // Email покупателя
-phone: string;        // Телефон покупателя
-address: string;      // Адрес доставки
+  email: string;        // Email покупателя
+  phone: string;        // Телефон покупателя
+  address: string;      // Адрес доставки
 }
 ```
 #### IUser
 ```typescript
 interface IUser extends IContactInfo {
-payment: PaymentMethod; // Способ оплаты
+  payment: PaymentMethod; // Способ оплаты
 }
 ```
 #### IOrderDTO
 ```typescript
 interface IOrderDTO extends IContactInfo {
-payment: PaymentMethod; // Способ оплаты
-total: number;          // Общая стоимость заказа
-items: string[];        // Массив ID товаров
+  payment: PaymentMethod; // Способ оплаты
+  total: number;          // Общая стоимость заказа
+  items: string[];        // Массив ID товаров
 }
 ```
 #### IOrderResponseDTO
 ```typescript
 interface IOrderResponseDTO {
-id: string;           // ID созданного заказа
-total: number;        // Общая сумма заказа
+  id: string;           // ID созданного заказа
+  total: number;        // Общая сумма заказа
 }
 ```
-#### IErrorResponseDTO
-```typescript
-interface IErrorResponseDTO {
-error: string;        // Текст ошибки
-}
-```
-
 #### IApi
 ```typescript
 interface IApi {
@@ -520,8 +729,8 @@ interface IApi {
 #### IProductsResponseDTO
 ```typescript
 interface IProductsResponseDTO {
-total: number;        // Общее количество товаров
-items: IProductDTO[]; // Массив товаров
+  total: number;        // Общее количество товаров
+  items: IProductDTO[]; // Массив товаров
 }
 ```
 ### Типы данных
@@ -529,11 +738,11 @@ items: IProductDTO[]; // Массив товаров
 #### ProductCategory
 ```typescript
 type ProductCategory =
-| 'софт-скил'
-| 'хард-скил'
-| 'другое'
-| 'кнопка'
-| 'дополнительное';
+  | 'софт-скил'
+  | 'хард-скил'
+  | 'другое'
+  | 'кнопка'
+  | 'дополнительное';
 ```
 #### PaymentMethod
 ```typescript
@@ -544,22 +753,22 @@ type PaymentMethod = 'online' | 'cash';
 #### IComponent
 ```typescript
 interface IComponent {
-render(): HTMLElement;  // Возвращает DOM-элемент компонента
+  render(): HTMLElement;  // Возвращает DOM-элемент компонента
 }
 ```
 #### ITemplateComponent
 ```typescript
 interface ITemplateComponent extends IComponent {
-readonly template: HTMLTemplateElement; // HTML-шаблон
-readonly container: HTMLElement;        // Контейнер компонента
+  readonly template: HTMLTemplateElement; // HTML-шаблон
+  readonly container: HTMLElement;        // Контейнер компонента
 }
 ```
 #### IModal
 ```typescript
 interface IModal extends ITemplateComponent {
-open(): void;                          // Открывает модальное окно
-close(): void;                         // Закрывает модальное окно
-setContent(content: HTMLElement): void; // Устанавливает содержимое
+  open(): void;                          // Открывает модальное окно
+  close(): void;                         // Закрывает модальное окно
+  setContent(content: HTMLElement): void; // Устанавливает содержимое
 }
 ```
 #### IProductCard
@@ -572,46 +781,46 @@ interface IProductCard extends ITemplateComponent {
 #### ICatalog
 ```typescript
 interface ICatalog extends ITemplateComponent {
-readonly cards: ProductCard[];                    // Массив карточек
-addCard(card: ProductCard): void;                 // Добавляет карточку
-setCards(cards: ProductCard[]): void;             // Устанавливает карточки
-removeCard(card: ProductCard): void;              // Удаляет карточку
-clear(): void;                                    // Очищает каталог
-createCardsFromProducts(products: IProduct[]): void; // Создает карточки из товаров
-updateCards(): void;                              // Обновляет карточки
+  readonly cards: ProductCard[];                    // Массив карточек
+  addCard(card: ProductCard): void;                 // Добавляет карточку
+  setCards(cards: ProductCard[]): void;             // Устанавливает карточки
+  removeCard(card: ProductCard): void;              // Удаляет карточку
+  clear(): void;                                    // Очищает каталог
+  createCardsFromProducts(products: IProduct[]): void; // Создает карточки из товаров
+  updateCards(): void;                              // Обновляет карточки
 }
 ```
 #### IOrderForm
 ```typescript
 interface IOrderForm extends ITemplateComponent {
-readonly paymentMethod: PaymentMethod | null; // Выбранный способ оплаты
-readonly address: string;                      // Адрес доставки
-readonly isValid: boolean;                     // Валидность формы
-setPaymentMethod(method: PaymentMethod): void; // Устанавливает способ оплаты
-setAddress(address: string): void;             // Устанавливает адрес
+  readonly paymentMethod: PaymentMethod | null; // Выбранный способ оплаты
+  readonly address: string;                      // Адрес доставки
+  readonly isValid: boolean;                     // Валидность формы
+  setPaymentMethod(method: PaymentMethod): void; // Устанавливает способ оплаты
+  setAddress(address: string): void;             // Устанавливает адрес
 }
 ```
 #### IContactsForm
 ```typescript
 interface IContactsForm extends ITemplateComponent {
-readonly email: string;           // Email
-readonly phone: string;           // Телефон
-readonly isValid: boolean;        // Валидность формы
-setEmail(email: string): void;    // Устанавливает email
-setPhone(phone: string): void;    // Устанавливает телефон
+  readonly email: string;           // Email
+  readonly phone: string;           // Телефон
+  readonly isValid: boolean;        // Валидность формы
+  setEmail(email: string): void;    // Устанавливает email
+  setPhone(phone: string): void;    // Устанавливает телефон
 }
 ```
 #### IView
 ```typescript
 interface IView {
-readonly events: IEvents; // Брокер событий
+  readonly events: IEvents; // Брокер событий
 }
 ```
 #### IPresenter
 ```typescript
 interface IPresenter {
-readonly view: IView;     // Представление
-init(): void;             // Инициализация презентера
+  readonly view: IView;     // Представление
+  init(): void;             // Инициализация презентера
 }
 ```
 ### События приложения
@@ -620,165 +829,155 @@ init(): void;             // Инициализация презентера
 ```typescript
 enum AppEvent {
 // События каталога
-PRODUCTS_LOADED = 'products:loaded',    // Товары загружены
-PRODUCT_SELECT = 'product:select',      // Товар выбран
-PRODUCT_PREVIEW = 'product:preview',    // Превью товара
-
-// События карточек
-CARDS_LOADED = 'cards:loaded',          // Карточки загружены
-CARD_ADD = 'card:add',                  // Карточка добавлена
-CARD_REMOVE = 'card:remove',            // Карточка удалена
-
-// События корзины
-BASKET_ADD = 'basket:add',              // Товар добавлен в корзину
-BASKET_REMOVE = 'basket:remove',        // Товар удален из корзины
-BASKET_UPDATE = 'basket:update',        // Корзина обновлена
-BASKET_CLEAR = 'basket:clear',          // Корзина очищена
-BASKET_OPEN = 'basket:open',            // Корзина открыта
-
-// События заказа
-ORDER_OPEN = 'order:open',              // Форма заказа открыта
-ORDER_UPDATE = 'order:update',          // Заказ обновлен
-ORDER_PAYMENT_SELECT = 'order:payment:select', // Способ оплаты выбран
-ORDER_ADDRESS_SET = 'order:address:set',        // Адрес установлен
-ORDER_CONTACTS_SET = 'order:contacts:set',      // Контакты установлены
-ORDER_CONFIRM = 'order:confirm',        // Заказ подтвержден
-ORDER_SUBMIT = 'order:submit',          // Заказ отправлен
-ORDER_SUCCESS = 'order:success',        // Заказ успешно создан
-ORDER_CLEAR = 'order:clear',            // Заказ очищен
-
-// События модальных окон
-MODAL_OPEN = 'modal:open',              // Модальное окно открыто
-MODAL_CLOSE = 'modal:close',            // Модальное окно закрыто
-
-// События форм
-FORM_ERRORS = 'form:errors',            // Ошибки формы
-FORM_VALID = 'form:valid',              // Форма валидна
-ORDER_FORM_VALID = 'order:form:valid',  // Форма заказа валидна
-ORDER_FORM_ERRORS = 'order:form:errors', // Ошибки формы заказа
-CONTACTS_FORM_VALID = 'contacts:form:valid',   // Форма контактов валидна
-CONTACTS_FORM_ERRORS = 'contacts:form:errors', // Ошибки формы контактов
+  PRODUCTS_LOADED = 'products:loaded',    // Товары загружены
+  PRODUCT_SELECT = 'product:select',      // Товар выбран
+  PRODUCT_PREVIEW = 'product:preview',    // Превью товара
+  
+  // События карточек
+  CARDS_LOADED = 'cards:loaded',          // Карточки загружены
+  CARD_ADD = 'card:add',                  // Карточка добавлена
+  CARD_REMOVE = 'card:remove',            // Карточка удалена
+  
+  // События корзины
+  BASKET_ADD = 'basket:add',              // Товар добавлен в корзину
+  BASKET_REMOVE = 'basket:remove',        // Товар удален из корзины
+  BASKET_UPDATE = 'basket:update',        // Корзина обновлена
+  BASKET_CLEAR = 'basket:clear',          // Корзина очищена
+  BASKET_OPEN = 'basket:open',            // Корзина открыта
+  
+  // События заказа
+  ORDER_OPEN = 'order:open',              // Форма заказа открыта
+  ORDER_SUBMIT = 'order:submit',          // Заказ отправлен
+  ORDER_CONFIRM = 'order:confirm',        // Заказ подтвержден
+  ORDER_SUCCESS = 'order:success',        // Заказ успешно создан
+  ORDER_CLEAR = 'order:clear',            // Заказ очищен
+  ORDER_UPDATE = 'order:update',          // Заказ обновлен
+  ORDER_CONTACTS_SET = 'order:contacts:set', // Контакты установлены
+  
+  // События модального окна
+  MODAL_OPEN = 'modal:open',              // Модальное окно открыто
+  MODAL_CLOSE = 'modal:close',            // Модальное окно закрыто
 }
 ```
-### Интерфейсы событий
+### Типы событий
 
-#### IProductsLoadedEvent
+#### Типы данных событий
 ```typescript
 interface IProductsLoadedEvent {
-products: IProduct[];     // Загруженные товары
+  products: IProduct[];     // Загруженные товары
 }
 ```
 #### ICardsLoadedEvent
 ```typescript
 interface ICardsLoadedEvent {
-cards: ProductCard[];     // Загруженные карточки
+  cards: ProductCard[];     // Загруженные карточки
 }
 ```
 #### ICardAddEvent
 ```typescript
 interface ICardAddEvent {
-card: ProductCard;        // Добавленная карточка
+  card: ProductCard;        // Добавленная карточка
 }
 ```
 #### ICardRemoveEvent
 ```typescript
 interface ICardRemoveEvent {
-card: ProductCard;        // Удаленная карточка
+  card: ProductCard;        // Удаленная карточка
 }
 ```
 #### IProductSelectEvent
 ```typescript
 interface IProductSelectEvent {
-productId: string;        // ID выбранного товара
+  productId: string;        // ID выбранного товара
 }
 ```
 #### IBasketAddEvent
 ```typescript
 interface IBasketAddEvent {
-productId: string;        // ID добавляемого товара
+  productId: string;        // ID добавляемого товара
 }
 ```
 #### IBasketRemoveEvent
 ```typescript
 interface IBasketRemoveEvent {
-productId: string;        // ID удаляемого товара
+  productId: string;        // ID удаляемого товара
 }
 ```
 #### IBasketUpdateEvent
 ```typescript
 interface IBasketUpdateEvent {
-items: IProduct[];        // Товары в корзине
-total: number;            // Общая стоимость
-count: number;            // Количество товаров
+  items: IProduct[];        // Товары в корзине
+  total: number;            // Общая стоимость
+  count: number;            // Количество товаров
 }
 ```
 #### IOrderUpdateEvent
 ```typescript
 interface IOrderUpdateEvent {
-items: string[];          // ID товаров в заказе
-total: number;            // Общая стоимость заказа
+  items: string[];          // ID товаров в заказе
+  total: number;            // Общая стоимость заказа
 }
 ```
 #### IOrderPaymentSelectEvent
 ```typescript
 interface IOrderPaymentSelectEvent {
-method: PaymentMethod;    // Выбранный способ оплаты
+  method: PaymentMethod;    // Выбранный способ оплаты
 }
 ```
 #### IOrderAddressSetEvent
 ```typescript
 interface IOrderAddressSetEvent {
-address: string;          // Установленный адрес
+  address: string;          // Установленный адрес
 }
 ```
 #### IOrderContactsSetEvent
 ```typescript
 interface IOrderContactsSetEvent {
-email: string;            // Email покупателя
-phone: string;            // Телефон покупателя
+  email: string;            // Email покупателя
+  phone: string;            // Телефон покупателя
 }
 ```
 #### IOrderSubmitEvent
 ```typescript
 interface IOrderSubmitEvent {
-order: IOrderDTO;         // Данные заказа для отправки
+  order: IOrderDTO;         // Данные заказа для отправки
 }
 ```
 #### IOrderSuccessEvent
 ```typescript
 interface IOrderSuccessEvent {
-orderId: string;          // ID созданного заказа
-total: number;            // Общая сумма заказа
+  orderId: string;          // ID созданного заказа
+  total: number;            // Общая сумма заказа
 }
 ```
 #### IModalOpenEvent
 ```typescript
 interface IModalOpenEvent {
-content: HTMLElement;     // Содержимое модального окна
+  content: HTMLElement;     // Содержимое модального окна
 }
 ```
 #### IFormErrorsEvent
 ```typescript
 interface IFormErrorsEvent {
-errors: string[];         // Массив ошибок валидации
+  errors: string[];         // Массив ошибок валидации
 }
 ```
 #### IOrderFormValidEvent
 ```typescript
 interface IOrderFormValidEvent {
-isValid: boolean;         // Валидность формы заказа
+  isValid: boolean;         // Валидность формы заказа
 }
 ```
 #### IOrderFormErrorsEvent
 ```typescript
 interface IOrderFormErrorsEvent {
-errors: string[];         // Ошибки формы заказа
+  errors: string[];         // Ошибки формы заказа
 }
 ```
 #### IContactsFormValidEvent
 ```typescript
 interface IContactsFormValidEvent {
-isValid: boolean;         // Валидность формы контактов
+  isValid: boolean;         // Валидность формы контактов
 }
 ```
 #### IContactsFormErrorsEvent
