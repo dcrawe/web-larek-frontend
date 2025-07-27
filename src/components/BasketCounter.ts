@@ -1,6 +1,6 @@
 import { Component } from './base/Component';
 import { IEvents } from './base/events';
-import { AppEvent } from '../types';
+import { AppEvent, IBasketUpdateEvent } from '../types';
 import { CLASS_NAMES, ERROR_MESSAGES } from '../utils/constants';
 
 /**
@@ -33,7 +33,7 @@ export class BasketCounter extends Component {
    */
   private _initEventListeners(): void {
     // Обработчик обновления корзины
-    this._events.on<{ items: any[], total: number, count: number }>(AppEvent.BASKET_UPDATE, (data) => {
+    this._events.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, (data) => {
       this._updateCounter(data.count);
     });
   }

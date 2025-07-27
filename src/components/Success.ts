@@ -1,6 +1,6 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { AppEvent } from '../types';
+import { AppEvent, IOrderSuccessEvent, EmptyEvent } from '../types';
 import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 
 export class Success extends TemplateComponent {
@@ -37,11 +37,11 @@ export class Success extends TemplateComponent {
 	private _initEventListeners(): void {
 		// Обработчик клика по кнопке закрытия
 		this._button.addEventListener('click', () => {
-			this._events.emit(AppEvent.MODAL_CLOSE);
+			this._events.emit<EmptyEvent>(AppEvent.MODAL_CLOSE, {});
 		});
 
 		// Обработчик события успешного оформления заказа от модели
-		this._events.on<{ orderId: string, total: number }>(AppEvent.ORDER_SUCCESS, (data) => {
+		this._events.on<IOrderSuccessEvent>(AppEvent.ORDER_SUCCESS, (data) => {
 			this._updateOrderInfo(data.orderId, data.total);
 		});
 	}

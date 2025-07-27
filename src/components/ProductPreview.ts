@@ -1,5 +1,10 @@
 import { IEvents } from './base/events';
-import { AppEvent, IProduct } from '../types';
+import {
+	AppEvent,
+	IBasketAddEvent,
+	IBasketRemoveEvent,
+	IProduct,
+} from '../types';
 import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 import { AbstractProductView } from './base/AbstractProductView';
 
@@ -14,7 +19,9 @@ export class ProductPreview extends AbstractProductView {
 	) {
 		super(productId, events, TEMPLATE_IDS.CARD_PREVIEW, getProduct);
 
-		this._addButton = this._element.querySelector(`.${CLASS_NAMES.CARD_BUTTON}`) as HTMLButtonElement;
+		this._addButton = this._element.querySelector(
+			`.${CLASS_NAMES.CARD_BUTTON}`
+		) as HTMLButtonElement;
 
 		if (!this._addButton) {
 			throw new Error(ERROR_MESSAGES.ADD_TO_BASKET_BUTTON_NOT_FOUND);
@@ -50,9 +57,13 @@ export class ProductPreview extends AbstractProductView {
 		// Обработчик клика по кнопке добавления/удаления из корзины
 		this._addButton.addEventListener('click', () => {
 			if (this._isInBasket(this._productId)) {
-				this._events.emit(AppEvent.BASKET_REMOVE, { productId: this._productId });
+				this._events.emit<IBasketRemoveEvent>(AppEvent.BASKET_REMOVE, {
+					productId: this._productId,
+				});
 			} else {
-				this._events.emit(AppEvent.BASKET_ADD, { productId: this._productId });
+				this._events.emit<IBasketAddEvent>(AppEvent.BASKET_ADD, {
+					productId: this._productId,
+				});
 			}
 
 			this.updateAddButtonState();

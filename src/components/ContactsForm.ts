@@ -1,7 +1,18 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { IContactsForm, AppEvent } from '../types';
-import { ERROR_MESSAGES, FORM_SELECTORS, TEMPLATE_IDS } from '../utils/constants';
+import {
+	IContactsForm,
+	AppEvent,
+	IOrderContactsSetEvent,
+	IContactsFormValidEvent,
+	IContactsFormErrorsEvent,
+	EmptyEvent,
+} from '../types';
+import {
+	ERROR_MESSAGES,
+	FORM_SELECTORS,
+	TEMPLATE_IDS,
+} from '../utils/constants';
 import { OrderModel } from '../models';
 
 export class ContactsForm extends TemplateComponent implements IContactsForm {
@@ -76,7 +87,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 	setEmail(email: string): void {
 		this._emailInput.value = email;
 
-		this._events.emit(AppEvent.ORDER_CONTACTS_SET, {
+		this._events.emit<IOrderContactsSetEvent>(AppEvent.ORDER_CONTACTS_SET, {
 			email: email,
 			phone: this.phone,
 		});
@@ -88,7 +99,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 	setPhone(phone: string): void {
 		this._phoneInput.value = phone;
 
-		this._events.emit(AppEvent.ORDER_CONTACTS_SET, {
+		this._events.emit<IOrderContactsSetEvent>(AppEvent.ORDER_CONTACTS_SET, {
 			email: this.email,
 			phone: phone,
 		});
@@ -132,7 +143,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 			event.preventDefault();
 
 			if (this._isValid) {
-				this._events.emit(AppEvent.ORDER_CONFIRM);
+				this._events.emit<EmptyEvent>(AppEvent.ORDER_CONFIRM, {});
 			}
 		});
 
@@ -147,7 +158,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 		});
 
 		// Обработчик обновления валидности формы контактов
-		this._events.on<{ isValid: boolean }>(
+		this._events.on<IContactsFormValidEvent>(
 			AppEvent.CONTACTS_FORM_VALID,
 			(data) => {
 				this.updateValidState(data.isValid);
@@ -155,7 +166,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 		);
 
 		// Обработчик обновления ошибок формы контактов
-		this._events.on<{ errors: string[] }>(
+		this._events.on<IContactsFormErrorsEvent>(
 			AppEvent.CONTACTS_FORM_ERRORS,
 			(data) => {
 				this.updateErrors(data.errors);
@@ -163,7 +174,7 @@ export class ContactsForm extends TemplateComponent implements IContactsForm {
 		);
 
 		// Обработчик очистки заказа
-		this._events.on(AppEvent.ORDER_CLEAR, () => {
+		this._events.on<EmptyEvent>(AppEvent.ORDER_CLEAR, () => {
 			this.clear();
 			this.updateValidState(false);
 		});

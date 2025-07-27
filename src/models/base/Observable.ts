@@ -1,4 +1,5 @@
 import { IEvents } from '../../components';
+import { AppEvent, IEventPayloadMap } from '../../types';
 
 /**
  * Базовый класс для наблюдаемых моделей
@@ -9,7 +10,10 @@ export abstract class Observable {
 	/**
 	 * Уведомляет подписчиков об изменениях
 	 */
-	protected _notifyChange(eventName: string, data?: any): void {
+	protected _notifyChange<T extends AppEvent>(
+		eventName: T,
+		data?: IEventPayloadMap[T]
+	): void {
 		this._events.emit(eventName, data);
 	}
 }

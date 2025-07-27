@@ -1,7 +1,23 @@
 import { EventEmitter, BasketCounter, ProductCard } from '../components';
 import { ApiService } from '../services/ApiService';
 import { BasketModel, ProductModel, OrderModel } from '../models';
-import { AppEvent, IPresenter, IView, IOrderDTO, IProduct, IProductDTO } from '../types';
+import { 
+	AppEvent, 
+	IPresenter, 
+	IView, 
+	IOrderDTO, 
+	IProduct, 
+	IProductDTO, 
+	IProductsLoadedEvent,
+	IProductSelectEvent,
+	IBasketAddEvent,
+	IBasketRemoveEvent,
+	IBasketUpdateEvent,
+	IOrderContactsSetEvent,
+	IOrderSuccessEvent,
+	IModalOpenEvent,
+	EmptyEvent
+} from '../types';
 import { Basket, Catalog, ContactsForm, ProductPreview, OrderForm, Modal, Success } from '../components';
 import { CLASS_NAMES } from '../utils/constants';
 import { toProductCategory } from '../utils/utils';
@@ -132,17 +148,17 @@ export class AppPresenter implements IPresenter {
 	 */
 	private _initEventListeners(): void {
 		// Обработчик события загрузки товаров из модели
-		this._eventEmitter.on<{ products: IProduct[] }>(AppEvent.PRODUCTS_LOADED, (data) => {
+		this._eventEmitter.on<IProductsLoadedEvent>(AppEvent.PRODUCTS_LOADED, (data) => {
 			this._catalog.createCardsFromProducts(data.products);
 		});
 
 		// Обработчик обновления карточки каталога при изменении корзины
-		this._eventEmitter.on(AppEvent.BASKET_UPDATE, () => {
+		this._eventEmitter.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, () => {
 			this._catalog.updateCards();
 		});
 
 		// Обработчик выбора товара
-		this._eventEmitter.on<{ productId: string }>(AppEvent.PRODUCT_SELECT, (data) => {
+		this._eventEmitter.on<IProductSelectEvent>(AppEvent.PRODUCT_SELECT, (data) => {
 			const preview = new ProductPreview(
 				data.productId,
 				this._eventEmitter,
@@ -150,16 +166,16 @@ export class AppPresenter implements IPresenter {
 				(productId: string) => this._basketModel.hasItem(productId)
 			);
 
-			this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: preview.render() });
+			this._eventEmitter.emit<IModalOpenEvent>(AppEvent.MODAL_OPEN, { content: preview.render() });
 		});
 
 		// Обработчик открытия корзины
-		this._eventEmitter.on(AppEvent.BASKET_OPEN, () => {
-			this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._basket.render() });
+		this._eventEmitter.on<EmptyEvent>(AppEvent.BASKET_OPEN, () => {
+			this._eventEmitter.emit<IModalOpenEvent>(AppEvent.MODAL_OPEN, { content: this._basket.render() });
 		});
 
 		// Обработчик добавления товара в корзину
-		this._eventEmitter.on<{ productId: string }>(AppEvent.BASKET_ADD, (data) => {
+		this._eventEmitter.on<IBasketAddEvent>(AppEvent.BASKET_ADD, (data) => {
 			const product = this._productModel.getProduct(data.productId);
 			if (product) {
 				this._basketModel.addItem(product);
@@ -167,17 +183,17 @@ export class AppPresenter implements IPresenter {
 		});
 
 		// Обработчик удаления товара из корзины
-		this._eventEmitter.on<{ productId: string }>(AppEvent.BASKET_REMOVE, (data) => {
+		this._eventEmitter.on<IBasketRemoveEvent>(AppEvent.BASKET_REMOVE, (data) => {
 			this._basketModel.removeItem(data.productId);
 		});
 
 		// Обработчик открытия формы заказа
-		this._eventEmitter.on(AppEvent.ORDER_OPEN, () => {
-			this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._orderForm.render() });
+		this._eventEmitter.on<EmptyEvent>(AppEvent.ORDER_OPEN, () => {
+			this._eventEmitter.emit<IModalOpenEvent>(AppEvent.MODAL_OPEN, { content: this._orderForm.render() });
 		});
 
 		// Обработчик изменения контактных данных
-		this._eventEmitter.on<{ email: string; phone: string }>(AppEvent.ORDER_CONTACTS_SET, (data) => {
+		this._eventEmitter.on<IOrderContactsSetEvent>(AppEvent.ORDER_CONTACTS_SET, (data) => {
 			this._orderModel.setContacts(data.email, data.phone);
 
 			if (this._orderModel.isValid()) {
@@ -186,7 +202,7 @@ export class AppPresenter implements IPresenter {
 		});
 
 		// Обработчик подтверждения заказа
-		this._eventEmitter.on(AppEvent.ORDER_CONFIRM, async () => {
+		this._eventEmitter.on<EmptyEvent>(AppEvent.ORDER_CONFIRM, async () => {
 			try {
 				if (!this._orderModel.isValid()) {
 					return;
@@ -200,13 +216,13 @@ export class AppPresenter implements IPresenter {
 					this._basketModel.clear();
 					this._orderModel.clear();
 
-					this._eventEmitter.emit(AppEvent.ORDER_CLEAR);
-					this._eventEmitter.emit(AppEvent.ORDER_SUCCESS, {
+					this._eventEmitter.emit<EmptyEvent>(AppEvent.ORDER_CLEAR, {});
+					this._eventEmitter.emit<IOrderSuccessEvent>(AppEvent.ORDER_SUCCESS, {
 						orderId: response.id,
 						total: response.total
 					});
 
-					this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._success.render() });
+					this._eventEmitter.emit<IModalOpenEvent>(AppEvent.MODAL_OPEN, { content: this._success.render() });
 				}
 			} catch (error) {
 				console.error('Ошибка при оформлении заказа:', error);
@@ -214,8 +230,8 @@ export class AppPresenter implements IPresenter {
 		});
 
 		// Обработчик подтверждения заказа с контактной информацией
-		this._eventEmitter.on(AppEvent.ORDER_SUBMIT, () => {
-			this._eventEmitter.emit(AppEvent.MODAL_OPEN, { content: this._contactsForm.render() });
+		this._eventEmitter.on<EmptyEvent>(AppEvent.ORDER_SUBMIT, () => {
+			this._eventEmitter.emit<IModalOpenEvent>(AppEvent.MODAL_OPEN, { content: this._contactsForm.render() });
 		});
 	}
 }

@@ -1,6 +1,12 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { AppEvent, IProduct } from '../types';
+import {
+	AppEvent,
+	IProduct,
+	IBasketUpdateEvent,
+	IBasketRemoveEvent,
+	EmptyEvent,
+} from '../types';
 import { CLASS_NAMES, ERROR_MESSAGES, TEMPLATE_IDS } from '../utils/constants';
 
 export class Basket extends TemplateComponent {
@@ -28,33 +34,53 @@ export class Basket extends TemplateComponent {
 	/**
 	 * Обновляет отображение корзины
 	 */
-	private _updateDisplay(items: IProduct[], total: number, count: number): void {
+	private _updateDisplay(
+		items: IProduct[],
+		total: number,
+		count: number
+	): void {
 		this._list.innerHTML = '';
 
 		items.forEach((item, index) => {
-			const template = document.getElementById(TEMPLATE_IDS.CARD_BASKET) as HTMLTemplateElement;
+			const template = document.getElementById(
+				TEMPLATE_IDS.CARD_BASKET
+			) as HTMLTemplateElement;
 			const clone = template.content.cloneNode(true) as DocumentFragment;
 			const basketItem = clone.firstElementChild as HTMLElement;
 
-			const indexElement = basketItem.querySelector(`.${CLASS_NAMES.BASKET_ITEM_INDEX}`);
+			const indexElement = basketItem.querySelector(
+				`.${CLASS_NAMES.BASKET_ITEM_INDEX}`
+			);
+
 			if (indexElement) {
 				indexElement.textContent = String(index + 1);
 			}
 
-			const titleElement = basketItem.querySelector(`.${CLASS_NAMES.CARD_TITLE}`);
+			const titleElement = basketItem.querySelector(
+				`.${CLASS_NAMES.CARD_TITLE}`
+			);
+
 			if (titleElement) {
 				titleElement.textContent = item.title;
 			}
 
-			const priceElement = basketItem.querySelector(`.${CLASS_NAMES.CARD_PRICE}`);
+			const priceElement = basketItem.querySelector(
+				`.${CLASS_NAMES.CARD_PRICE}`
+			);
+
 			if (priceElement) {
 				priceElement.textContent = `${item.price} синапсов`;
 			}
 
-			const deleteButton = basketItem.querySelector(`.${CLASS_NAMES.BASKET_ITEM_DELETE}`);
+			const deleteButton = basketItem.querySelector(
+				`.${CLASS_NAMES.BASKET_ITEM_DELETE}`
+			);
+
 			if (deleteButton) {
 				deleteButton.addEventListener('click', () => {
-					this._events.emit(AppEvent.BASKET_REMOVE, { productId: item.id });
+					this._events.emit<IBasketRemoveEvent>(AppEvent.BASKET_REMOVE, {
+						productId: item.id,
+					});
 				});
 			}
 
@@ -70,13 +96,13 @@ export class Basket extends TemplateComponent {
 	 */
 	private _initEventListeners(): void {
 		// Обработчик обновления корзины от модели
-		this._events.on<{ items: IProduct[], total: number, count: number }>(AppEvent.BASKET_UPDATE, (data) => {
+		this._events.on<IBasketUpdateEvent>(AppEvent.BASKET_UPDATE, (data) => {
 			this._updateDisplay(data.items, data.total, data.count);
 		});
 
 		// Обработчик клика по кнопке оформления заказа
 		this._button.addEventListener('click', () => {
-			this._events.emit(AppEvent.ORDER_OPEN);
+			this._events.emit<EmptyEvent>(AppEvent.ORDER_OPEN, {});
 		});
 	}
 }

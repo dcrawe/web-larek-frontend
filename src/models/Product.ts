@@ -20,7 +20,7 @@ export class ProductModel extends Observable {
 			image: `${CDN_URL}/${dto.image}`,
 			title: dto.title,
 			category: dto.category as any,
-			price: dto.price || 0
+			price: dto.price || 0,
 		};
 	}
 
@@ -28,14 +28,16 @@ export class ProductModel extends Observable {
 	 * Устанавливает список товаров
 	 */
 	setProducts(productsDTO: IProduct[]): void {
-		this._products = productsDTO.map(dto => this.mapProduct(dto));
-		this._notifyChange(AppEvent.PRODUCTS_LOADED, { products: this._products });
+		this._products = productsDTO.map((dto) => this.mapProduct(dto));
+		this._notifyChange<AppEvent.PRODUCTS_LOADED>(AppEvent.PRODUCTS_LOADED, {
+			products: this._products,
+		});
 	}
 
 	/**
 	 * Получает товар по ID
 	 */
 	getProduct(id: string): IProduct | null {
-		return this._products.find(product => product.id === id) || null;
+		return this._products.find((product) => product.id === id) || null;
 	}
 }

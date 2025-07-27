@@ -1,7 +1,21 @@
 import { TemplateComponent } from './base/TemplateComponent';
 import { IEvents } from './base/events';
-import { IOrderForm, AppEvent, PaymentMethod } from '../types';
-import { CLASS_NAMES, ERROR_MESSAGES, FORM_SELECTORS, TEMPLATE_IDS } from '../utils/constants';
+import {
+	IOrderForm,
+	AppEvent,
+	PaymentMethod,
+	IOrderPaymentSelectEvent,
+	IOrderAddressSetEvent,
+	IOrderFormValidEvent,
+	IOrderFormErrorsEvent,
+	EmptyEvent,
+} from '../types';
+import {
+	CLASS_NAMES,
+	ERROR_MESSAGES,
+	FORM_SELECTORS,
+	TEMPLATE_IDS,
+} from '../utils/constants';
 import { OrderModel } from '../models';
 
 export class OrderForm extends TemplateComponent implements IOrderForm {
@@ -88,7 +102,9 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 			}
 		});
 
-		this._events.emit(AppEvent.ORDER_PAYMENT_SELECT, { method: method });
+		this._events.emit<IOrderPaymentSelectEvent>(AppEvent.ORDER_PAYMENT_SELECT, {
+			method: method,
+		});
 	}
 
 	/**
@@ -97,16 +113,15 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 	setAddress(address: string): void {
 		this._addressInput.value = address;
 
-		this._events.emit(AppEvent.ORDER_ADDRESS_SET, { address: address });
+		this._events.emit<IOrderAddressSetEvent>(AppEvent.ORDER_ADDRESS_SET, {
+			address: address,
+		});
 	}
 
 	/**
 	 * Обновляет состояние валидности формы
 	 */
 	updateValidState(isValid: boolean): void {
-		console.log(12312);
-		console.log(isValid);
-		console.log(this._submitButton);
 		this._isValid = isValid;
 		this._submitButton.disabled = !isValid;
 
@@ -144,7 +159,7 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 			event.preventDefault();
 
 			if (this._isValid) {
-				this._events.emit(AppEvent.ORDER_SUBMIT);
+				this._events.emit<EmptyEvent>(AppEvent.ORDER_SUBMIT, {});
 			}
 		});
 
@@ -162,12 +177,12 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 		});
 
 		// Обработчик обновления валидности формы заказа
-		this._events.on<{ isValid: boolean }>(AppEvent.ORDER_FORM_VALID, (data) => {
+		this._events.on<IOrderFormValidEvent>(AppEvent.ORDER_FORM_VALID, (data) => {
 			this.updateValidState(data.isValid);
 		});
 
 		// Обработчик обновления ошибок формы заказа
-		this._events.on<{ errors: string[] }>(
+		this._events.on<IOrderFormErrorsEvent>(
 			AppEvent.ORDER_FORM_ERRORS,
 			(data) => {
 				this.updateErrors(data.errors);
@@ -175,7 +190,7 @@ export class OrderForm extends TemplateComponent implements IOrderForm {
 		);
 
 		// Обработчик очистки заказа
-		this._events.on(AppEvent.ORDER_CLEAR, () => {
+		this._events.on<EmptyEvent>(AppEvent.ORDER_CLEAR, () => {
 			this.clear();
 			this.updateValidState(false);
 		});

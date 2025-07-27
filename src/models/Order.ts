@@ -1,5 +1,16 @@
 import { IEvents } from '../components';
-import { PaymentMethod } from '../types';
+import {
+	PaymentMethod,
+	IFormErrorsEvent,
+	IOrderAddressSetEvent,
+	IOrderContactsSetEvent,
+	IOrderPaymentSelectEvent,
+	IOrderFormValidEvent,
+	IContactsFormValidEvent,
+	IOrderFormErrorsEvent,
+	IContactsFormErrorsEvent,
+	EmptyEvent,
+} from '../types';
 import { AppEvent } from '../types';
 import { ERROR_MESSAGES, REGEX } from '../utils/constants';
 
@@ -142,16 +153,24 @@ export class OrderModel {
 	 */
 	private _validateAndEmit(
 		validationFn: () => string[],
-		validEvent: AppEvent,
-		errorEvent: AppEvent
+		validEvent: AppEvent.ORDER_FORM_VALID | AppEvent.CONTACTS_FORM_VALID,
+		errorEvent: AppEvent.ORDER_FORM_ERRORS | AppEvent.CONTACTS_FORM_ERRORS
 	): void {
 		const errors = validationFn();
 		const isValid = errors.length === 0;
 
-		this._events.emit(validEvent, { isValid });
+		if (validEvent === AppEvent.ORDER_FORM_VALID) {
+			this._events.emit<IOrderFormValidEvent>(validEvent, { isValid });
+		} else {
+			this._events.emit<IContactsFormValidEvent>(validEvent, { isValid });
+		}
 
 		if (!isValid) {
-			this._events.emit(errorEvent, { errors });
+			if (errorEvent === AppEvent.ORDER_FORM_ERRORS) {
+				this._events.emit<IOrderFormErrorsEvent>(errorEvent, { errors });
+			} else {
+				this._events.emit<IContactsFormErrorsEvent>(errorEvent, { errors });
+			}
 		}
 	}
 
@@ -195,7 +214,7 @@ export class OrderModel {
 	private _validateOrder(): void {
 		const isValid = this.isValid();
 
-		this._events.emit(AppEvent.FORM_VALID, { isValid });
+		this._events.emit<EmptyEvent>(AppEvent.FORM_VALID, {});
 
 		if (!isValid) {
 			const errors: string[] = [];
@@ -210,7 +229,7 @@ export class OrderModel {
 				errors.push(ERROR_MESSAGES.PAYMENT_REQUIRED);
 			}
 
-			this._events.emit(AppEvent.FORM_ERRORS, { errors });
+			this._events.emit<IFormErrorsEvent>(AppEvent.FORM_ERRORS, { errors });
 		}
 	}
 
@@ -240,16 +259,25 @@ export class OrderModel {
 	 * Инициализирует обработчики событий
 	 */
 	private _initEventListeners(): void {
-		this._events.on<{ address: string }>(AppEvent.ORDER_ADDRESS_SET, (data) => {
-			this.setAddress(data.address);
-		});
+		this._events.on<IOrderAddressSetEvent>(
+			AppEvent.ORDER_ADDRESS_SET,
+			(data) => {
+				this.setAddress(data.address);
+			}
+		);
 
-		this._events.on<{ email: string, phone: string }>(AppEvent.ORDER_CONTACTS_SET, (data) => {
-			this.setContacts(data.email, data.phone);
-		});
+		this._events.on<IOrderContactsSetEvent>(
+			AppEvent.ORDER_CONTACTS_SET,
+			(data) => {
+				this.setContacts(data.email, data.phone);
+			}
+		);
 
-		this._events.on<{ method: PaymentMethod }>(AppEvent.ORDER_PAYMENT_SELECT, (data) => {
-			this.setPaymentMethod(data.method);
-		});
+		this._events.on<IOrderPaymentSelectEvent>(
+			AppEvent.ORDER_PAYMENT_SELECT,
+			(data) => {
+				this.setPaymentMethod(data.method);
+			}
+		);
 	}
 }

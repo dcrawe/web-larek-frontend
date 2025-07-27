@@ -62,11 +62,11 @@ export interface ICardRemoveEvent {
 }
 
 export interface IProductSelectEvent {
-	product: IProduct;
+	productId: string;
 }
 
 export interface IBasketAddEvent {
-	product: IProduct;
+	productId: string;
 }
 
 export interface IBasketRemoveEvent {
@@ -75,6 +75,12 @@ export interface IBasketRemoveEvent {
 
 export interface IBasketUpdateEvent {
 	items: IProduct[];
+	total: number;
+	count: number;
+}
+
+export interface IOrderUpdateEvent {
+	items: string[];
 	total: number;
 }
 
@@ -124,6 +130,9 @@ export interface IContactsFormErrorsEvent {
 	errors: string[];
 }
 
+// Тип для событий без данных
+export type EmptyEvent = Record<string, never>;
+
 export interface IEventPayloadMap {
 	[AppEvent.PRODUCTS_LOADED]: IProductsLoadedEvent;
 	[AppEvent.CARDS_LOADED]: ICardsLoadedEvent;
@@ -134,22 +143,23 @@ export interface IEventPayloadMap {
 	[AppEvent.BASKET_ADD]: IBasketAddEvent;
 	[AppEvent.BASKET_REMOVE]: IBasketRemoveEvent;
 	[AppEvent.BASKET_UPDATE]: IBasketUpdateEvent;
-	[AppEvent.BASKET_CLEAR]: Record<string, never>;
-	[AppEvent.BASKET_OPEN]: Record<string, never>;
-	[AppEvent.ORDER_OPEN]: Record<string, never>;
+	[AppEvent.BASKET_CLEAR]: EmptyEvent;
+	[AppEvent.BASKET_OPEN]: EmptyEvent;
+	[AppEvent.ORDER_OPEN]: EmptyEvent;
+	[AppEvent.ORDER_UPDATE]: IOrderUpdateEvent;
 	[AppEvent.ORDER_PAYMENT_SELECT]: IOrderPaymentSelectEvent;
 	[AppEvent.ORDER_ADDRESS_SET]: IOrderAddressSetEvent;
 	[AppEvent.ORDER_CONTACTS_SET]: IOrderContactsSetEvent;
+	[AppEvent.ORDER_CONFIRM]: EmptyEvent;
 	[AppEvent.ORDER_SUBMIT]: IOrderSubmitEvent;
 	[AppEvent.ORDER_SUCCESS]: IOrderSuccessEvent;
+	[AppEvent.ORDER_CLEAR]: EmptyEvent;
 	[AppEvent.MODAL_OPEN]: IModalOpenEvent;
-	[AppEvent.MODAL_CLOSE]: Record<string, never>;
+	[AppEvent.MODAL_CLOSE]: EmptyEvent;
 	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
-	[AppEvent.FORM_VALID]: Record<string, never>;
+	[AppEvent.FORM_VALID]: EmptyEvent;
 	[AppEvent.ORDER_FORM_VALID]: IOrderFormValidEvent;
 	[AppEvent.ORDER_FORM_ERRORS]: IOrderFormErrorsEvent;
 	[AppEvent.CONTACTS_FORM_VALID]: IContactsFormValidEvent;
 	[AppEvent.CONTACTS_FORM_ERRORS]: IContactsFormErrorsEvent;
-	[AppEvent.FORM_ERRORS]: IFormErrorsEvent;
-	[AppEvent.FORM_VALID]: Record<string, never>;
 }
